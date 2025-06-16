@@ -14,14 +14,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.spotify-app.app"
+      "bundleIdentifier": "com.spotify.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/Spotify.png",
         "backgroundColor": "#1DB954"
       },
-      "package": "com.spotify-app.app",
+      "package": "com.spotify.app",
       "edgeToEdgeEnabled": true
     },
     "web": {
