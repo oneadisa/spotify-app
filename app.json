@@ -1,12 +1,19 @@
 {
   "expo": {
-    "name": "spotify-app",
+    "name": "",
     "slug": "spotify-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/Spotify.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
+    "androidNavigationBar": {
+      "visible": "sticky-immersive",
+      "backgroundColor": "#000000"
+    },
+    "androidStatusBar": {
+      "backgroundColor": "#000000"
+    },
     "splash": {
       "image": "./assets/StartUp-Screen.jpg",
       "resizeMode": "cover",
@@ -26,6 +33,11 @@
     },
     "web": {
       "favicon": "./assets/Spotify.png"
-    }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-web-browser"
+    ]
   }
 }

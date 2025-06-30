@@ -1,6 +1,5 @@
 import React from 'react';
 import { Path, Svg } from 'react-native-svg';
-import { useTheme } from '../../theme/index.ts';
 
 interface GoogleIconProps {
   size?: number;
@@ -9,8 +8,7 @@ interface GoogleIconProps {
 }
 
 export const GoogleIcon: React.FC<GoogleIconProps> = (props: GoogleIconProps) => {
-  const theme = useTheme();
-  const iconColor = props.color || theme.colors.textPrimary;
+  const iconColor = props.color || '#000000'; // Default to black if no color provided
 
   return (
     <Svg

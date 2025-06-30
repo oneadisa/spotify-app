@@ -1,4 +1,3 @@
-import { useTheme } from '@/theme/ThemeProvider.tsx';
 import React from 'react';
 import { Svg, Image } from 'react-native-svg';
 

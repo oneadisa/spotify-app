@@ -1,37 +1,7 @@
-// Home
-import HomeScreen from './Home/HomeScreen.tsx';
-
-// Search
-import SearchScreen from './Search/SearchScreen.tsx';
-
-// Library
-import LibraryScreen from './Library/LibraryScreen.tsx';
-
-// Player
-import PlayerScreen from './Player/PlayerScreen.tsx';
-
-// Playlist
-import PlaylistScreen from './Playlist/PlaylistScreen.tsx';
-
-// Artist
-import ArtistScreen from './Artist/ArtistScreen.tsx';
-
-export {
-  // Home
-  HomeScreen,
-  
-  // Search
-  SearchScreen,
-  
-  // Library
-  LibraryScreen,
-  
-  // Player
-  PlayerScreen,
-  
-  // Playlist
-  PlaylistScreen,
-  
-  // Artist
-  ArtistScreen,
-};
+export { default as HomeScreen } from './HomeScreen.tsx';
+export { default as SearchScreen } from './SearchScreen.tsx';
+export { default as LibraryScreen } from './LibraryScreen.tsx';
+export { default as AuthScreen } from './AuthScreen.tsx';
+// export { default as PlayerScreen } from './PlayerScreen.tsx';
+export { default as PlaylistScreen } from './PlaylistScreen.tsx';
+export { default as ArtistScreen } from './ArtistScreen.tsx';

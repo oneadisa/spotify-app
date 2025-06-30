@@ -1,24 +1,34 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useTheme } from '../theme/index.ts';
-import HomeIcon from '../components/icons/HomeIcon.tsx';
-import HomeOutlineIcon from '../components/icons/HomeOutlineIcon.tsx';
-import SearchIcon from '../components/icons/SearchIcon.tsx';
-import SearchOutlineIcon from '../components/icons/SearchOutlineIcon.tsx';
-import LibraryIcon from '../components/icons/LibraryIcon.tsx';
-import LibraryOutlineIcon from '../components/icons/LibraryOutlineIcon.tsx';
-import { HomeStackNavigator, SearchStackNavigator, LibraryStackNavigator } from './stacks/index.ts';
+import { useTheme } from '../theme';
+import HomeIcon from '../components/icons/HomeIcon';
+import HomeOutlineIcon from '../components/icons/HomeOutlineIcon';
+import SearchIcon from '../components/icons/SearchIcon';
+import SearchOutlineIcon from '../components/icons/SearchOutlineIcon';
+import LibraryIcon from '../components/icons/LibraryIcon';
+import LibraryOutlineIcon from '../components/icons/LibraryOutlineIcon';
+import { HomeStackNavigator } from './stacks/HomeStack';
+import { SearchStackNavigator } from './stacks/SearchStack';
+import { LibraryStackNavigator } from './stacks/LibraryStack';
+import type { BottomTabNavigationOptions } from '@react-navigation/bottom-tabs';
+import type { HomeStackParamList, SearchStackParamList, LibraryStackParamList } from './types';
 
-const Tab = createBottomTabNavigator();
+export type MainTabsParamList = {
+  HomeTab: undefined;
+  SearchTab: undefined;
+  LibraryTab: undefined;
+};
 
-export const MainTabs = () => {
+const Tab = createBottomTabNavigator<MainTabsParamList>();
+
+export const MainTabs: React.FC = () => {
   const theme = useTheme();
 
   return (
     <Tab.Navigator
-      screenOptions={({ route }: { route: { name: string } }) => ({
-        tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => {
-          const renderTabBarIcon = (routeName: string, focused: boolean) => {
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused }) => {
+          const renderTabBarIcon = (routeName: keyof MainTabsParamList, focused: boolean) => {
             const baseIconProps = { size: 24 };
             const inactiveColor = theme.colors.textSecondary;
             const activeColor = routeName === 'LibraryTab' ? '#fff' : theme.colors.primary;
@@ -52,17 +62,36 @@ export const MainTabs = () => {
       <Tab.Screen 
         name="HomeTab" 
         component={HomeStackNavigator} 
-        options={{ title: 'Home' }} 
+        options={{ 
+          title: 'Home',
+          // @ts-ignore - testID is a valid prop for testing
+          tabBarTestID: 'home-tab',
+        }} 
       />
       <Tab.Screen 
         name="SearchTab" 
         component={SearchStackNavigator} 
-        options={{ title: 'Search' }} 
+        options={{ 
+          title: 'Search',
+          // @ts-ignore - testID is a valid prop for testing
+          tabBarTestID: 'search-tab',
+        }} 
       />
-      <Tab.Screen 
-        name="LibraryTab" 
-        component={LibraryStackNavigator} 
-        options={{ title: 'Library' }} 
+      <Tab.Screen
+        name="LibraryTab"
+        component={LibraryStackNavigator}
+        options={{
+          title: 'Your Library',
+          // @ts-ignore - testID is a valid prop for testing
+          tabBarTestID: 'library-tab',
+          tabBarActiveTintColor: '#fff',
+          tabBarInactiveTintColor: theme.colors.textSecondary,
+          tabBarStyle: {
+            backgroundColor: '#121212',
+            borderTopColor: '#282828',
+            borderTopWidth: 1,
+          },
+        }}
       />
     </Tab.Navigator>
   );

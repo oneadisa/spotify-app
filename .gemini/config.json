@@ -1,0 +1,9 @@
+{
+    "model": "gemini-1.5-pro-latest",
+    "context": [
+      "spotify-app-requirements.md",
+      "src/hooks/useAuth.ts",
+      "src/api/spotify.ts"
+    ]
+  }
+  

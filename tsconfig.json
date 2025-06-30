@@ -6,8 +6,8 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "module": "Node16",
-    "moduleResolution": "node16",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     "jsx": "react-native",
     "allowSyntheticDefaultImports": true,
@@ -21,14 +21,20 @@
     "lib": ["esnext"],
     "noEmit": true,
     "types": ["node"],
-    "typeRoots": ["./node_modules/@types", "./src/types"]
+    "typeRoots": [
+      "./node_modules/@types"
+    ]
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx"
+    "**/*.tsx",
+    "app.config.ts"
   ],
   "exclude": [
     "node_modules",
-    "**/__tests__/*"
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*.spec.tsx",
+    "**/*.test.tsx"
   ]
 }

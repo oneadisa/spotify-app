@@ -1,6 +1,5 @@
 import React from 'react';
 import { Path, Svg } from 'react-native-svg';
-import { useTheme } from '../../theme/index.ts';
 
 interface PhoneIconProps {
   size?: number;
@@ -9,8 +8,7 @@ interface PhoneIconProps {
 }
 
 export const PhoneIcon: React.FC<PhoneIconProps> = (props: PhoneIconProps) => {
-  const theme = useTheme();
-  const iconColor = props.color || theme.colors.textPrimary;
+  const iconColor = props.color || '#FFFFFF'; // Default to white if no color provided
 
   return (
     <Svg

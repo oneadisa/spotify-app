@@ -1,3 +1,3 @@
-export { default as HomeStackNavigator } from './HomeStack';
-export { default as SearchStackNavigator } from './SearchStack';
-export { default as LibraryStackNavigator } from './LibraryStack';
+export * from './HomeStack.tsx';
+export * from './SearchStack.tsx';
+export * from './LibraryStack.tsx';
