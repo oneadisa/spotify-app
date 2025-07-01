@@ -26,13 +26,11 @@
     "expo-splash-screen": "~0.30.9",
     "expo-status-bar": "~2.2.3",
     "expo-web-browser": "~14.2.0",
-    "npx": "^10.2.2",
     "react": "19.0.0",
     "react-native": "0.79.3",
     "react-native-safe-area-context": "^5.4.0",
     "react-native-screens": "~4.11.1",
     "react-native-svg": "^15.12.0",
-    "start": "^5.1.0",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
