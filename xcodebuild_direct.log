@@ -1,0 +1,6 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -workspace ios/SpotifyClone.xcworkspace -scheme SpotifyClone -configuration Debug -sdk iphonesimulator18.5 -destination "platform=iOS Simulator,name=iPhone 16 Pro" -verbose
+
+Build settings from command line:
+    SDKROOT = iphonesimulator18.5
+

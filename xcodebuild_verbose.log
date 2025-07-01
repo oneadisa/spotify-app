@@ -1,0 +1,2 @@
+2025-06-30 18:04:41.146 xcodebuild[23990:19258449] Writing error result bundle to /var/folders/42/zb6kkmh53_q5hfch6swfbl2m0000gn/T/ResultBundle_2025-30-06_18-04-0041.xcresult
+xcodebuild: error: SDK "iphonesimulator18.0" cannot be located.
