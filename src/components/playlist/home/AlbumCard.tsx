@@ -1,10 +1,9 @@
 import React from 'react';
 import { View, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { useTheme } from '../../../theme/ThemeProvider';
 
 const CARD_SIZE = 160;
 import AppText from '@/components/core/AppText.tsx';
-import { theme } from '@/theme/index.ts';
-import { useTheme } from '@/hooks/useTheme.ts';
 
 const AlbumCard: React.FC<{
   title: string;

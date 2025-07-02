@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions } from 'react-native';
-import { theme } from '../../../theme/index.ts';
-import { useTheme } from '../../../hooks/useTheme.ts';
+import { useTheme } from '../../../theme/ThemeProvider';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 56) / 2; // 16 + 16 + 24 (padding + gap) / 2 columns

@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Dimensions } from 'react-native';
-import { theme } from '../../../theme/index.ts';
-import { useTheme } from '../../../hooks/useTheme.ts';
+import { useTheme } from '../../../theme/ThemeProvider';
 
 interface AlbumCardProps {
   title: string;

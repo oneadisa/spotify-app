@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,27 +9,65 @@ import {
   SafeAreaView,
   StatusBar,
   TextInput,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../navigation/types';
 import NowPlayingBar from '../components/playlist/NowPlayingBar/NowPlayingBar.tsx';
 import More from '@/components/icons/more.tsx';
+import { useSpotifyApi } from '../hooks/useSpotifyApi';
+import { useAuth } from '../contexts/AuthContext';
+import BackButton from '../components/icons/back.tsx';
+import { getTrackPreview, useAudioPlayer, AdvancedAudioService } from '../services/audioService';
+import { usePlayback } from '../contexts/PlaybackContext';
+import { showToast } from '../utils/toast';
 
 // Import genre images
 const cozyImg = require('../../assets/images/searchscreen/genres/cozy.png');
 const koreanIndieImg = require('../../assets/images/searchscreen/genres/korean_indie.png');
 const healingImg = require('../../assets/images/searchscreen/genres/healing.png');
 
-type RootStackParamList = {
-  Artist: undefined;
-  // Add other screen params as needed
-};
-
-type SearchScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Artist'>;
-
 const SpotifySearchScreen = () => {
-  const navigation = useNavigation<SearchScreenNavigationProp>();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const { getCurrentUserProfile, search, isLoading, error } = useSpotifyApi();
+  const { isAuthenticated, profileImage } = useAuth();
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<any>(null);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null);
+  const { isPlaying, isLoading: audioLoading, play, stop } = useAudioPlayer();
+  const { previewTrackId } = usePlayback();
+
+  useEffect(() => {
+    if (!query) {
+      setResults(null);
+      setSearchError(null);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    setSearchError(null);
+    if (debounceTimeout) clearTimeout(debounceTimeout);
+    const timeout = setTimeout(async () => {
+      try {
+        const res = await search(query, ['track', 'artist', 'album', 'playlist'], { limit: 5 });
+        setResults(res);
+        setSearchError(null);
+      } catch (e: any) {
+        setSearchError(e?.message || 'Search failed');
+        setResults(null);
+      } finally {
+        setSearching(false);
+      }
+    }, 500);
+    setDebounceTimeout(timeout);
+    // Cleanup
+    return () => clearTimeout(timeout);
+  }, [query]);
 
   const genres = [
     {
@@ -59,17 +97,41 @@ const SpotifySearchScreen = () => {
     </TouchableOpacity>
   );
 
+  // Play/stop preview handler
+  const handlePreview = async (track: any) => {
+    if (previewTrackId === track.id) {
+      await stop();
+      return;
+    }
+    try {
+      const previewUrl = await getTrackPreview(track.artists?.[0]?.name || '', track.name);
+      if (!previewUrl) throw new Error('No preview available');
+      await play(previewUrl, {
+        id: track.id,
+        title: track.name,
+        artist: track.artists?.map((a: any) => a?.name).filter(Boolean).join(', '),
+        artwork: track.album?.images?.[0]?.url,
+      });
+    } catch (e: any) {
+      Alert.alert('Preview not available', e?.message || 'Preview not available');
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
-      
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <Image
-            source={require('../../assets/images/profile_picture.png')}
-            style={styles.profileImage}
-          />
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
+            <BackButton />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => { navigation.navigate('User'); showToast('Profile opened', 'info'); }}>
+            <Image
+              source={profileImage ? { uri: profileImage } : require('../../assets/images/profile_picture.png')}
+              style={styles.profileImage}
+            />
+          </TouchableOpacity>
           <Text style={styles.headerTitle}>Search</Text>
         </View>
 
@@ -81,9 +143,144 @@ const SpotifySearchScreen = () => {
               style={styles.searchInput}
               placeholder="What do you want to listen to?"
               placeholderTextColor="#666"
+              value={query}
+              onChangeText={setQuery}
+              autoCorrect={false}
+              autoCapitalize="none"
+              returnKeyType="search"
             />
           </View>
         </View>
+
+        {/* Search Results */}
+        {searching && (
+          <View style={{ alignItems: 'center', marginVertical: 16 }}>
+            <Text style={{ color: '#fff' }}>Searching...</Text>
+          </View>
+        )}
+        {searchError && (
+          <View style={{ alignItems: 'center', marginVertical: 16 }}>
+            <Text style={{ color: 'red' }}>{searchError}</Text>
+          </View>
+        )}
+        {results && (
+          <View style={{ marginBottom: 32 }}>
+            {/* Tracks */}
+            {results.tracks && results.tracks.items.length > 0 && (
+              <View style={{ marginBottom: 16 }}>
+                <Text style={styles.sectionTitle}>Tracks</Text>
+                {results.tracks.items.filter(Boolean).map((track: any) => {
+                  if (!track || !track.id) return null;
+                  return (
+                    <View key={track.id} style={styles.browseCard}>
+                      <Image
+                        source={
+                          track.album?.images && Array.isArray(track.album.images) && track.album.images[0]?.url
+                            ? { uri: track.album.images[0].url }
+                            : require('../../assets/images/profile_picture.png')
+                        }
+                        style={[styles.browseImage, { borderRadius: 8 }]}
+                      />
+                      <View style={styles.browseContent}>
+                        <Text style={styles.browseTitle}>{track?.name || 'Unknown Track'}</Text>
+                        <Text style={styles.browseArtist}>{track.artists?.filter(Boolean).map((a: any) => a?.name).filter(Boolean).join(', ') || 'Unknown Artist'}</Text>
+                      </View>
+                      <TouchableOpacity
+                        style={{ marginLeft: 12 }}
+                        onPress={() => handlePreview(track)}
+                        disabled={audioLoading && previewTrackId === track.id}
+                      >
+                        {audioLoading && previewTrackId === track.id ? (
+                          <ActivityIndicator color="#1DB954" size={20} />
+                        ) : (
+                          <Ionicons name={isPlaying && previewTrackId === track.id ? 'stop-circle' : 'play-circle'} size={28} color="#1DB954" />
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+            {/* Artists */}
+            {results.artists && results.artists.items.length > 0 && (
+              <View style={{ marginBottom: 16 }}>
+                <Text style={styles.sectionTitle}>Artists</Text>
+                {results.artists.items.filter(Boolean).map((artist: any) => {
+                  if (!artist || !artist.id) return null;
+                  return (
+                    <TouchableOpacity key={artist.id} style={styles.browseCard}>
+                      <Image
+                        source={
+                          artist?.images && Array.isArray(artist.images) && artist.images[0]?.url
+                            ? { uri: artist.images[0].url }
+                            : require('../../assets/images/profile_picture.png')
+                        }
+                        style={[styles.browseImage, { borderRadius: 32 }]}
+                      />
+                      <View style={styles.browseContent}>
+                        <Text style={styles.browseTitle}>{artist?.name || 'Unknown Artist'}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+            {/* Albums */}
+            {results.albums && results.albums.items.length > 0 && (
+              <View style={{ marginBottom: 16 }}>
+                <Text style={styles.sectionTitle}>Albums</Text>
+                {results.albums.items.filter(Boolean).map((album: any) => {
+                  if (!album || !album.id) return null;
+                  return (
+                    <TouchableOpacity key={album.id} style={styles.browseCard}>
+                      <Image
+                        source={
+                          album?.images && Array.isArray(album.images) && album.images[0]?.url
+                            ? { uri: album.images[0].url }
+                            : require('../../assets/images/profile_picture.png')
+                        }
+                        style={[styles.browseImage, { borderRadius: 8 }]}
+                      />
+                      <View style={styles.browseContent}>
+                        <Text style={styles.browseTitle}>{album?.name || 'Unknown Album'}</Text>
+                        <Text style={styles.browseArtist}>{album.artists?.filter(Boolean).map((a: any) => a?.name).filter(Boolean).join(', ') || 'Unknown Artist'}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+            {/* Playlists */}
+            {results.playlists && results.playlists.items.length > 0 && (
+              <View style={{ marginBottom: 16 }}>
+                <Text style={styles.sectionTitle}>Playlists</Text>
+                {results.playlists.items.filter(Boolean).map((playlist: any) => {
+                  if (!playlist || !playlist.id) return null;
+                  return (
+                    <TouchableOpacity
+                      key={playlist.id}
+                      style={styles.browseCard}
+                      onPress={() => navigation.navigate('Playlist', { id: playlist.id, name: playlist.name })}
+                    >
+                      <Image
+                        source={
+                          playlist?.images && Array.isArray(playlist.images) && playlist.images[0]?.url
+                            ? { uri: playlist.images[0].url }
+                            : require('../../assets/images/profile_picture.png')
+                        }
+                        style={[styles.browseImage, { borderRadius: 8 }]}
+                      />
+                      <View style={styles.browseContent}>
+                        <Text style={styles.browseTitle}>{playlist?.name || 'Unknown Playlist'}</Text>
+                        <Text style={styles.browseArtist}>{playlist?.owner?.display_name || 'Unknown Owner'}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            )}
+          </View>
+        )}
 
         {/* Picked for you section */}
         <View style={styles.section}>
@@ -91,7 +288,7 @@ const SpotifySearchScreen = () => {
           
           <TouchableOpacity 
             style={styles.pickedCard}
-            onPress={() => navigation.navigate('Artist')}
+            onPress={() => navigation.navigate('Artist', { id: 'picked-artist', name: 'K-Pop Gaming' })}
           >
             <Image
               source={require('../../assets/images/picked.png')}
@@ -151,13 +348,7 @@ const SpotifySearchScreen = () => {
         </View>
       </ScrollView>
       
-      <NowPlayingBar 
-        cover={require('../../assets/images/now_playing.png')}
-        title="Paint The Town Red"
-        artist="Doja Cat"
-        onPlayPress={() => console.log('Play pressed')}
-        onDevicesPress={() => console.log('Devices pressed')}
-      />
+      <NowPlayingBar />
     </SafeAreaView>
   );
 };

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,12 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import NowPlayingBar from '../components/playlist/NowPlayingBar/NowPlayingBar.tsx';
 import Add from '@/components/icons/add.tsx';
+import { useSpotifyApi } from '../hooks/useSpotifyApi';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../navigation/types';
+import { showToast } from '../utils/toast';
 
 // Import images
 const justHitsImg = require('../../assets/images/homescreen/musictiles/just_hits.png');
@@ -33,6 +39,10 @@ type MusicTileItem = {
 };
 
 const MusicApp = () => {
+  // const { getCurrentUserProfile } = useSpotifyApi();
+  const { isAuthenticated, profileImage } = useAuth();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+
   const categories = [
     { id: 1, title: 'All', active: true },
     { id: 2, title: 'Music', active: false },
@@ -147,10 +157,12 @@ const MusicApp = () => {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.profileContainer}>
-          <Image
-            source={require('../../assets/images/profile_picture.png')}
-            style={styles.profileImage}
-          />
+          <TouchableOpacity onPress={() => { navigation.navigate('User'); showToast('Profile opened', 'info'); }}>
+            <Image
+              source={profileImage ? { uri: profileImage } : require('../../assets/images/profile_picture.png')}
+              style={styles.profileImage}
+            />
+          </TouchableOpacity>
         </View>
         
         <ScrollView
@@ -233,11 +245,7 @@ const MusicApp = () => {
         </View>
       </ScrollView>
       
-      <NowPlayingBar 
-        cover={require('../../assets/images/now_playing.png')}
-        title="Paint The Town Red"
-        artist="Doja Cat"
-      />
+      <NowPlayingBar />
     </SafeAreaView>
   );
 };

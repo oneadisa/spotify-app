@@ -112,14 +112,17 @@ export const useSpotifyAuth = () => {
 
   // Exchange authorization code for access token
   const exchangeCodeForToken = async (code: string) => {
-    if (!request?.codeVerifier) {
+    if (!request) {
+      updateState({ error: 'Missing auth request object' });
+      return;
+    }
+    if (!request.codeVerifier) {
       updateState({ error: 'Missing code verifier' });
       return;
     }
 
     try {
       updateState({ isLoading: true });
-      
       const tokenResponse = await AuthSession.exchangeCodeAsync(
         {
           clientId: SPOTIFY_CONFIG.clientId,
@@ -136,13 +139,11 @@ export const useSpotifyAuth = () => {
 
       if (tokenResponse.accessToken) {
         const expiration = Date.now() + (tokenResponse.expiresIn || 3600) * 1000;
-        
         await Promise.all([
           SecureStore.setItemAsync(STORAGE_KEYS.ACCESS_TOKEN, tokenResponse.accessToken),
           SecureStore.setItemAsync(STORAGE_KEYS.REFRESH_TOKEN, tokenResponse.refreshToken || ''),
           SecureStore.setItemAsync(STORAGE_KEYS.TOKEN_EXPIRATION, expiration.toString()),
         ]);
-
         updateState({
           accessToken: tokenResponse.accessToken,
           refreshToken: tokenResponse.refreshToken || null,
@@ -152,9 +153,14 @@ export const useSpotifyAuth = () => {
           isLoading: false,
           error: null,
         });
-        
         // Navigate to main app
-        router.replace('/');
+        try {
+          if (router && typeof router.replace === 'function') {
+            router.replace('/');
+          }
+        } catch (navErr) {
+          console.warn('Navigation failed after token exchange', navErr);
+        }
       }
     } catch (err) {
       console.error('Failed to exchange code for token', err);
@@ -231,12 +237,22 @@ export const useSpotifyAuth = () => {
   // Logout function
   const logout = useCallback(async () => {
     try {
-      await Promise.all([
-        SecureStore.deleteItemAsync(STORAGE_KEYS.ACCESS_TOKEN),
-        SecureStore.deleteItemAsync(STORAGE_KEYS.REFRESH_TOKEN),
-        SecureStore.deleteItemAsync(STORAGE_KEYS.TOKEN_EXPIRATION),
-      ]);
-
+      // Use individual try-catch for each SecureStore operation
+      try {
+        await SecureStore.deleteItemAsync(STORAGE_KEYS.ACCESS_TOKEN);
+      } catch (e) {
+        console.warn('Failed to delete access token', e);
+      }
+      try {
+        await SecureStore.deleteItemAsync(STORAGE_KEYS.REFRESH_TOKEN);
+      } catch (e) {
+        console.warn('Failed to delete refresh token', e);
+      }
+      try {
+        await SecureStore.deleteItemAsync(STORAGE_KEYS.TOKEN_EXPIRATION);
+      } catch (e) {
+        console.warn('Failed to delete token expiration', e);
+      }
       updateState({
         accessToken: null,
         refreshToken: null,
@@ -245,9 +261,14 @@ export const useSpotifyAuth = () => {
         isAuthenticated: false,
         error: null,
       });
-      
-      // Navigate to auth screen
-      router.replace('/auth');
+      // Navigate to auth screen only if router is available
+      try {
+        if (router && typeof router.replace === 'function') {
+          router.replace('/auth');
+        }
+      } catch (e) {
+        console.warn('Navigation failed during logout', e);
+      }
     } catch (err) {
       console.error('Failed to clear authentication data', err);
       updateState({ error: 'Failed to log out' });

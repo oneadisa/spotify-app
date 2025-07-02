@@ -1,8 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../../theme/index.ts';
-import { useTheme } from '../../../hooks/useTheme.ts';
+import { useTheme } from '../../../theme/ThemeProvider';
 
 interface TrackItemProps {
   title: string;

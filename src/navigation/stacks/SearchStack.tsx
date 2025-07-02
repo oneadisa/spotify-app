@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SearchStackParamList } from '../types.ts';
 import { SearchScreen, PlaylistScreen, ArtistScreen } from '../../screens/index.ts';
+import PlayerScreen from '../../screens/ProfileScreen.tsx';
 
 const Stack = createNativeStackNavigator<SearchStackParamList>();
 
@@ -18,10 +19,7 @@ export const SearchStackNavigator = () => {
         name="Playlist" 
         component={PlaylistScreen}
         options={{
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: '',
-          headerTintColor: 'white',
+          headerShown: false,
         }}
       />
       <Stack.Screen 
@@ -34,6 +32,13 @@ export const SearchStackNavigator = () => {
           headerTintColor: 'white',
           headerBackVisible: false, // Hide the default back button
           headerLeft: () => null, // Remove the back button completely
+        }}
+      />
+      <Stack.Screen 
+        name="PlayerScreen" 
+        component={PlayerScreen}
+        options={{
+          headerShown: false,
         }}
       />
     </Stack.Navigator>

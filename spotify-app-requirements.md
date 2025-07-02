@@ -541,3 +541,11 @@ Stack Navigation within each tab as needed
 4. **Technical Documentation**: Brief explanation of architecture decisions
 
 This requirements document provides everything needed to build a maximum-scoring Spotify playlist app in 2 days. Focus on implementing features incrementally and testing thoroughly at each step.
+
+
+create playlist and edit playlist
+slider on home screen
+home screen with real spotify data. recently played. New releases. my artists. and other headings.
+artist screen from search and other screens.
+share playlist
+invite friends to join playlist

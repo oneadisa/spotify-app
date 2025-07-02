@@ -1,9 +1,8 @@
 import React from 'react';
 import { View, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import AppText from '../../core/AppText.tsx';
-import { theme } from '../../../theme/index.ts';
+import { useTheme } from '../../../theme/ThemeProvider';
 import PlayButton from './PlayButton.tsx';
-import { useTheme } from '../../../hooks/useTheme.ts';
 
 const PlaylistItem: React.FC<{
   title: string;

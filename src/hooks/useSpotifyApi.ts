@@ -1,10 +1,14 @@
 import { useState, useCallback } from 'react';
 import { SPOTIFY_CONFIG } from '../config/spotify';
 import { apiRequest, withApiHandler } from '../utils/api';
+import { useNavigation } from '@react-navigation/native';
+import { useSpotifyAuth } from './useSpotifyAuth';
 
 export const useSpotifyApi = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const navigation = useNavigation();
+  const { refreshAccessToken } = useSpotifyAuth();
 
   // Helper function to make API requests with loading and error states
   const makeRequest = useCallback(async <T = any>(
@@ -19,23 +23,48 @@ export const useSpotifyApi = () => {
     setIsLoading(true);
     setError(null);
 
+    let triedRefresh = false;
     try {
       const url = `${SPOTIFY_CONFIG.apiBaseUrl}${endpoint}`;
-      const response = await apiRequest<T>(url, {
-        method: options.method || 'GET',
-        body: options.body,
-        headers: options.headers,
-        authRequired: options.authRequired !== false, // Default to true
-      });
-
+      let response;
+      try {
+        response = await apiRequest<T>(url, {
+          method: options.method || 'GET',
+          body: options.body,
+          headers: options.headers,
+          authRequired: options.authRequired !== false, // Default to true
+        });
+      } catch (err: any) {
+        // If token expired, try to refresh ONCE
+        if (
+          err?.message?.toLowerCase().includes('access token expired') &&
+          !triedRefresh
+        ) {
+          triedRefresh = true;
+          await refreshAccessToken();
+          // Try the request again after refresh
+          response = await apiRequest<T>(url, {
+            method: options.method || 'GET',
+            body: options.body,
+            headers: options.headers,
+            authRequired: options.authRequired !== false,
+          });
+        } else {
+          throw err;
+        }
+      }
       return response;
-    } catch (err) {
+    } catch (err: any) {
       setError(err instanceof Error ? err.message : 'An error occurred');
+      // Redirect to AuthScreen if access token expired
+      if (err?.message?.toLowerCase().includes('access token expired')) {
+        navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+      }
       throw err;
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [navigation, refreshAccessToken]);
 
   // User endpoints
   const getCurrentUserProfile = useCallback(async () => {
@@ -186,44 +215,60 @@ export const useSpotifyApi = () => {
     );
   }, [makeRequest]);
 
+  // Playlist management
+  const createPlaylist = useCallback(async (userId: string, name: string, description: string = '', isPublic: boolean = true) => {
+    return withApiHandler(() => makeRequest(`/users/${userId}/playlists`, {
+      method: 'POST',
+      body: {
+        name,
+        description,
+        public: isPublic,
+      },
+    }));
+  }, [makeRequest]);
+
+  const addTracksToPlaylist = useCallback(async (playlistId: string, uris: string[]) => {
+    return withApiHandler(() => makeRequest(`/playlists/${playlistId}/tracks`, {
+      method: 'POST',
+      body: {
+        uris,
+      },
+    }));
+  }, [makeRequest]);
+
+  const removeTracksFromPlaylist = useCallback(async (playlistId: string, uris: string[]) => {
+    return withApiHandler(() => makeRequest(`/playlists/${playlistId}/tracks?method=delete`, {
+      method: 'POST',
+      body: {
+        tracks: uris.map(uri => ({ uri })),
+      },
+    }));
+  }, [makeRequest]);
+
   return {
-    // State
     isLoading,
     error,
-    
-    // Core
     makeRequest,
-    
-    // User
     getCurrentUserProfile,
     getUserTopItems,
-    
-    // Player
     getCurrentlyPlaying,
     getRecentlyPlayed,
     startPlayback,
     pausePlayback,
     skipToNext,
     skipToPrevious,
-    
-    // Search
     search,
-    
-    // Playlist
     getPlaylist,
     getUserPlaylists,
-    
-    // Track
     getTrack,
-    
-    // Artist
     getArtist,
     getArtistTopTracks,
     getArtistAlbums,
-    
-    // Album
     getAlbum,
     getAlbumTracks,
+    createPlaylist,
+    addTracksToPlaylist,
+    removeTracksFromPlaylist,
   };
 };
 

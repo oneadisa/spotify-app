@@ -17,6 +17,8 @@ export type RootStackParamList = {
   Search: undefined;
   SearchResults: { query: string };
   Library: undefined;
+  PlayerScreen: undefined;
+  User: undefined;
 };
 
 // Home tab navigation types
@@ -25,6 +27,7 @@ export type HomeStackParamList = {
   Playlist: { id: string; name?: string };
   Artist: { id: string; name?: string };
   Album: { id: string; name?: string };
+  PlayerScreen: undefined;
 };
 
 // Search tab navigation types
@@ -35,6 +38,7 @@ export type SearchStackParamList = {
   Artist: { id: string; name?: string };
   Album: { id: string; name?: string };
   Category: { id: string; name: string };
+  PlayerScreen: undefined;
 };
 
 // Library tab navigation types
@@ -47,4 +51,5 @@ export type LibraryStackParamList = {
   RecentlyPlayed: undefined;
   MadeForYou: undefined;
   Podcasts: undefined;
+  PlayerScreen: undefined;
 };

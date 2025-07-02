@@ -1,10 +1,13 @@
 import React, { useEffect } from 'react';
-import { NavigationContainer, NavigationContainerRef } from '@react-navigation/native';
+import { NavigationContainer, NavigationContainerRef, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from './types';
 import { MainTabs } from './MainTabs';
 import AuthScreen from '../screens/AuthScreen';
+import UserScreen from '../screens/UserScreen';
 import { useAuth } from '../contexts/AuthContext';
+import { PlaybackProvider } from '../contexts/PlaybackContext';
+import { useTheme } from '../theme/ThemeProvider';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 
@@ -35,17 +38,33 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ isAuthenticated }) => {
     }
   }, [isAuthenticated]);
 
+  const theme = useTheme();
+
   return (
-    <NavigationContainer ref={navigationRef}>
-      <RootStack.Navigator
-        screenOptions={{
-          headerShown: false,
-          animation: 'slide_from_right',
-        }}
-      >
-        <RootStack.Screen name="Login" component={AuthScreen} />
-        <RootStack.Screen name="MainTabs" component={MainTabs} />
-      </RootStack.Navigator>
+    <NavigationContainer ref={navigationRef} theme={{
+      dark: theme.dark,
+      colors: {
+        primary: theme.colors.primary,
+        background: theme.colors.background,
+        card: theme.colors.card,
+        text: theme.colors.text,
+        border: theme.colors.border,
+        notification: theme.colors.notification,
+      },
+      fonts: DefaultTheme.fonts,
+    }}>
+      <PlaybackProvider>
+        <RootStack.Navigator
+          screenOptions={{
+            headerShown: false,
+            animation: 'slide_from_right',
+          }}
+        >
+          <RootStack.Screen name="Login" component={AuthScreen} />
+          <RootStack.Screen name="MainTabs" component={MainTabs} />
+          <RootStack.Screen name="User" component={UserScreen} />
+        </RootStack.Navigator>
+      </PlaybackProvider>
     </NavigationContainer>
   );
 };
