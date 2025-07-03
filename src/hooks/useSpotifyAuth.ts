@@ -59,12 +59,18 @@ export const useSpotifyAuth = () => {
 
   // Update state with a partial state object
   const updateState = (updates: Partial<AuthState>) => {
-    setState(prev => ({ ...prev, ...updates }));
+    console.log('useSpotifyAuth: Updating state with:', updates);
+    setState(prev => {
+      const newState = { ...prev, ...updates };
+      console.log('useSpotifyAuth: New state:', newState);
+      return newState;
+    });
   };
 
   // Load tokens from secure storage on mount
   useEffect(() => {
     const loadTokens = async () => {
+      console.log('useSpotifyAuth: Loading tokens from storage...');
       try {
         const [storedAccessToken, storedRefreshToken, storedExpiration] = await Promise.all([
           SecureStore.getItemAsync(STORAGE_KEYS.ACCESS_TOKEN),
@@ -72,9 +78,13 @@ export const useSpotifyAuth = () => {
           SecureStore.getItemAsync(STORAGE_KEYS.TOKEN_EXPIRATION),
         ]);
 
+        console.log('useSpotifyAuth: Loaded tokens - accessToken:', !!storedAccessToken, 'refreshToken:', !!storedRefreshToken, 'expiration:', storedExpiration);
+
         if (storedAccessToken && storedRefreshToken) {
           const expiration = storedExpiration ? parseInt(storedExpiration, 10) : null;
           const isExpired = expiration ? expiration < Date.now() : true;
+
+          console.log('useSpotifyAuth: Token expiration check - expiration:', expiration, 'isExpired:', isExpired);
 
           updateState({
             accessToken: storedAccessToken,
@@ -84,6 +94,7 @@ export const useSpotifyAuth = () => {
             isLoading: false,
           });
         } else {
+          console.log('useSpotifyAuth: No stored tokens found');
           updateState({ isLoading: false });
         }
       } catch (err) {
@@ -100,9 +111,12 @@ export const useSpotifyAuth = () => {
 
   // Handle authentication response
   useEffect(() => {
-    if (response?.type === 'success' && response.params.code) {
+    console.log('useSpotifyAuth: Auth response received:', response?.type);
+    if (response?.type === 'success' && 'params' in response && response.params.code) {
+      console.log('useSpotifyAuth: Exchanging code for token...');
       exchangeCodeForToken(response.params.code);
-    } else if (response?.type === 'error') {
+    } else if (response?.type === 'error' && 'params' in response) {
+      console.log('useSpotifyAuth: Auth error:', response.params.error);
       updateState({ 
         error: `Authentication error: ${response.params.error || 'Unknown error'}`,
         isLoading: false 
@@ -144,6 +158,7 @@ export const useSpotifyAuth = () => {
           SecureStore.setItemAsync(STORAGE_KEYS.REFRESH_TOKEN, tokenResponse.refreshToken || ''),
           SecureStore.setItemAsync(STORAGE_KEYS.TOKEN_EXPIRATION, expiration.toString()),
         ]);
+        console.log('Token exchange successful, updating state...');
         updateState({
           accessToken: tokenResponse.accessToken,
           refreshToken: tokenResponse.refreshToken || null,
@@ -153,14 +168,8 @@ export const useSpotifyAuth = () => {
           isLoading: false,
           error: null,
         });
-        // Navigate to main app
-        try {
-          if (router && typeof router.replace === 'function') {
-            router.replace('/');
-          }
-        } catch (navErr) {
-          console.warn('Navigation failed after token exchange', navErr);
-        }
+        console.log('State updated, authentication complete');
+        // Navigation will be handled by the AppNavigator based on state changes
       }
     } catch (err) {
       console.error('Failed to exchange code for token', err);

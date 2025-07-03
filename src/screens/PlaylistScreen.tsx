@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, ActivityIndicator, TouchableOpacity, Modal, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, ActivityIndicator, TouchableOpacity, Modal, TextInput, Alert, Share, Platform } from 'react-native';
 import { useTheme } from '../theme/ThemeProvider';
 import ScreenWrapper from '../components/common/ScreenWrapper.tsx';
 import { useSpotifyApi } from '../hooks/useSpotifyApi';
@@ -9,11 +9,13 @@ import type { StackNavigationProp } from '@react-navigation/stack';
 import type { SearchStackParamList } from '../navigation/types';
 import { getTrackPreview, useAudioPlayer, AdvancedAudioService } from '../services/audioService';
 import { Ionicons } from '@expo/vector-icons';
+import { showToast } from '../utils/toast';
+import { usePlaylists } from '../contexts/PlaylistContext';
 
 const PlaylistScreen = () => {
   const theme = useTheme();
-  const { getUserPlaylists, getPlaylist, getCurrentUserProfile, createPlaylist, addTracksToPlaylist, removeTracksFromPlaylist, isLoading, error } = useSpotifyApi();
-  const [playlists, setPlaylists] = useState<any[]>([]);
+  const { getUserPlaylists, getPlaylist, getCurrentUserProfile, createPlaylist, addTracksToPlaylist, removeTracksFromPlaylist, getUserTopItems, getRecentlyPlayed, isLoading, error, deletePlaylist, updatePlaylistDetails } = useSpotifyApi();
+  const { playlists, updatePlaylist } = usePlaylists();
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [playlistDetails, setPlaylistDetails] = useState<any>(null);
@@ -29,6 +31,43 @@ const PlaylistScreen = () => {
   const playlistId = route.params?.id;
   const { isPlaying, isLoading: audioLoading, play, stop } = useAudioPlayer();
   const [previewingTrackId, setPreviewingTrackId] = useState<string | null>(null);
+  const [suggestedTracks, setSuggestedTracks] = useState<any[]>([]);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
+
+  const handleSharePlaylist = async () => {
+    if (!playlistDetails) return;
+    
+    setShareLoading(true);
+    try {
+      const playlistUrl = playlistDetails.external_urls?.spotify;
+      const message = `Check out this playlist: ${playlistDetails.name} on Spotify`;
+      
+      if (playlistUrl) {
+        // Use native share dialog
+        await Share.share({
+          message: `${message}\n${playlistUrl}`,
+          url: playlistUrl,
+          title: `Share ${playlistDetails.name}`
+        }, {
+          dialogTitle: `Share ${playlistDetails.name}`,
+          subject: `Check out this playlist: ${playlistDetails.name}`,
+          // @ts-ignore - iOS only
+          tintColor: '#1DB954'
+        });
+      } else {
+        // Fallback to copying the message to clipboard if no URL is available
+        await Share.share({
+          message: `${message}\n(Playlist URL not available)`
+        });
+      }
+    } catch (error) {
+      console.error('Error sharing playlist:', error);
+      showToast('Failed to share playlist', 'error');
+    } finally {
+      setShareLoading(false);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -61,8 +100,7 @@ const PlaylistScreen = () => {
         setLoading(true);
         setFetchError(null);
         try {
-          const data = await getUserPlaylists(50, 0);
-          setPlaylists(data?.items?.filter(Boolean) || []);
+          await getUserPlaylists(50, 0);
         } catch (e: any) {
           setFetchError(e?.message || 'Failed to fetch playlists');
         } finally {
@@ -71,6 +109,32 @@ const PlaylistScreen = () => {
       })();
     }
   }, [playlistId]);
+
+  // Fetch suggestions for all playlists (not just empty)
+  useEffect(() => {
+    if (playlistId) {
+      (async () => {
+        try {
+          const [topTracks, recent] = await Promise.all([
+            getUserTopItems('tracks', { limit: 20 }),
+            getRecentlyPlayed(20),
+          ]);
+          // Merge and dedupe by track id
+          const all = [
+            ...(topTracks?.items || []),
+            ...((recent?.items || []).map((item: any) => item.track || item)),
+          ];
+          const seen = new Set();
+          const playlistTrackIds = new Set((tracks || []).map((item: any) => (item.track || item)?.id));
+          // Only suggest tracks not already in the playlist
+          const deduped = all.filter((t: any) => t && t.id && !seen.has(t.id) && !playlistTrackIds.has(t.id) && seen.add(t.id));
+          // Pick 5 random suggestions
+          const shuffled = deduped.sort(() => 0.5 - Math.random());
+          setSuggestedTracks(shuffled.slice(0, 5));
+        } catch {}
+      })();
+    }
+  }, [playlistId, tracks]);
 
   // Create playlist handler
   const handleCreatePlaylist = async () => {
@@ -82,9 +146,8 @@ const PlaylistScreen = () => {
       setNewPlaylistName('');
       setNewPlaylistDesc('');
       // Refresh playlists
-      const data = await getUserPlaylists(50, 0);
-      setPlaylists(data?.items?.filter(Boolean) || []);
-      Alert.alert('Success', 'Playlist created!');
+      await getUserPlaylists(50, 0);
+      // Alert.alert('Success', 'Playlist created!');
     } catch (e: any) {
       Alert.alert('Error', e?.message || 'Failed to create playlist');
     } finally {
@@ -95,16 +158,21 @@ const PlaylistScreen = () => {
   // Add track handler
   const handleAddTrack = async (trackUri: string) => {
     if (!playlistId) return;
+    if (!trackUri || typeof trackUri !== 'string' || !trackUri.startsWith('spotify:track:')) {
+      Alert.alert('Error', 'Invalid track URI.');
+      return;
+    }
     setActionLoading(trackUri);
     try {
       await addTracksToPlaylist(playlistId, [trackUri]);
-      Alert.alert('Success', 'Track added!');
+      // Alert.alert('Success', 'Track added!');
       // Optionally refresh playlist
       const data = await getPlaylist(playlistId);
       setPlaylistDetails(data);
       setTracks(data?.tracks?.items?.filter(Boolean) || []);
     } catch (e: any) {
       Alert.alert('Error', e?.message || 'Failed to add track');
+      console.error('Add track error:', e);
     } finally {
       setActionLoading(null);
     }
@@ -113,16 +181,21 @@ const PlaylistScreen = () => {
   // Remove track handler
   const handleRemoveTrack = async (trackUri: string) => {
     if (!playlistId) return;
+    if (!trackUri || typeof trackUri !== 'string' || !trackUri.startsWith('spotify:track:')) {
+      Alert.alert('Error', 'Invalid track URI.');
+      return;
+    }
     setActionLoading(trackUri);
     try {
       await removeTracksFromPlaylist(playlistId, [trackUri]);
-      Alert.alert('Success', 'Track removed!');
+      // Alert.alert('Success', 'Track removed!');
       // Optionally refresh playlist
       const data = await getPlaylist(playlistId);
       setPlaylistDetails(data);
       setTracks(data?.tracks?.items?.filter(Boolean) || []);
     } catch (e: any) {
       Alert.alert('Error', e?.message || 'Failed to remove track');
+      console.error('Remove track error:', e);
     } finally {
       setActionLoading(null);
     }
@@ -144,12 +217,55 @@ const PlaylistScreen = () => {
         title: track.name,
         artist: track.artists?.map((a: any) => a?.name).filter(Boolean).join(', '),
         artwork: track.album?.images?.[0]?.url,
+        artistId: track.artists?.[0]?.id || null,
       });
     } catch (e: any) {
       Alert.alert('Preview not available', e?.message || 'Preview not available');
       setPreviewingTrackId(null);
     }
   };
+
+  // Update playlist details when the playlist is edited
+  const handleUpdatePlaylist = async () => {
+    if (!playlistId || !newPlaylistName.trim()) return;
+    
+    try {
+      await updatePlaylistDetails(
+        playlistId,
+        newPlaylistName.trim(),
+        newPlaylistDesc.trim()
+      );
+      
+      // Update the local state immediately for a snappier UI
+      updatePlaylist(playlistId, {
+        name: newPlaylistName.trim(),
+        description: newPlaylistDesc.trim()
+      });
+      
+      // Also update the local playlist details
+      setPlaylistDetails((prev: any) => ({
+        ...prev,
+        name: newPlaylistName.trim(),
+        description: newPlaylistDesc.trim()
+      }));
+      
+      setShowEditModal(false);
+      showToast('Playlist updated!');
+    } catch (err) {
+      console.error('Error updating playlist:', err);
+      showToast('Failed to update playlist');
+    }
+  };
+
+  // When the playlist is updated in the context, update the local state
+  useEffect(() => {
+    if (playlistId && playlists.length > 0) {
+      const updatedPlaylist = playlists.find(p => p.id === playlistId);
+      if (updatedPlaylist) {
+        setPlaylistDetails(updatedPlaylist);
+      }
+    }
+  }, [playlists, playlistId]);
 
   if (loading) {
     return (
@@ -173,26 +289,51 @@ const PlaylistScreen = () => {
       <ScreenWrapper>
         <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 100 }}>
           <View style={styles.header}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={{ position: 'absolute', left: 16, top: 16, zIndex: 10 }}>
-              <BackButton />
-            </TouchableOpacity>
-            <Image
-              source={playlistDetails.images && playlistDetails.images[0]?.url ? { uri: playlistDetails.images[0].url } : require('../../assets/images/profile_picture.png')}
-              style={styles.playlistImageLarge}
-            />
-            <Text style={[styles.title, { color: theme.colors.text }]}>{playlistDetails.name}</Text>
+            {/* Header Buttons */}
+            <View style={{ position: 'absolute', left: 16, top: 16, zIndex: 10, flexDirection: 'row', alignItems: 'center', width: '100%', justifyContent: 'space-between', paddingRight: 16 }}>
+              <TouchableOpacity onPress={() => navigation.goBack()}>
+                <BackButton />
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                onPress={handleSharePlaylist} 
+                disabled={shareLoading}
+                style={{ padding: 8 }}
+              >
+                {shareLoading ? (
+                  <ActivityIndicator color={theme.colors.primary} size={20} />
+                ) : (
+                  <Ionicons name="share-social-outline" size={24} color={theme.colors.primary} />
+                )}
+              </TouchableOpacity>
+            </View>
+            <View style={styles.playlistImageLargeContainer}>
+              {playlistDetails.images?.[0]?.url ? (
+                <Image
+                  source={{ uri: playlistDetails.images[0].url }}
+                  style={styles.playlistImageLarge}
+                />
+              ) : (
+                <Ionicons name="musical-notes" size={60} color="#b3b3b3" />
+              )}
+            </View>
+            <Text style={[styles.playlistName, { color: theme.colors.text }]}>{playlistDetails?.name || 'Playlist'}</Text>
             <Text style={[styles.playlistDesc, { color: theme.colors.textSecondary }]}>{playlistDetails.owner?.display_name || 'Unknown Owner'}</Text>
             <Text style={[styles.playlistDesc, { color: theme.colors.textSecondary, marginTop: 4 }]}>{playlistDetails.description || ''}</Text>
           </View>
           <Text style={[styles.sectionTitle, { color: theme.colors.text, marginLeft: 16 }]}>Tracks</Text>
           {tracks.length === 0 && (
-            <Text style={{ color: theme.colors.textSecondary, textAlign: 'center', marginTop: 40 }}>No tracks found.</Text>
+            <Text style={{ color: theme.colors.textSecondary, textAlign: 'center', marginTop: 40 }}>No tracks yet.</Text>
           )}
+          {/* Playlist tracks */}
           {tracks.map((item, idx) => {
             const track = item.track || item; // API shape
             return (
               <View key={track.id || idx} style={styles.trackItem}>
-                <Text style={[styles.trackNumber, { color: theme.colors.textSecondary }]}>{idx + 1}</Text>
+                <Image
+                  source={track.album?.images && track.album.images[0]?.url ? { uri: track.album.images[0].url } : require('../../assets/images/profile_picture.png')}
+                  style={{ width: 48, height: 48, borderRadius: 8, marginRight: 12, backgroundColor: '#222' }}
+                />
                 <View style={styles.trackInfo}>
                   <Text style={[styles.trackTitle, { color: theme.colors.text }]} numberOfLines={1}>{track.name}</Text>
                   <Text style={[styles.trackArtist, { color: theme.colors.textSecondary }]} numberOfLines={1}>{track.artists?.filter(Boolean).map((a: any) => a?.name).filter(Boolean).join(', ') || 'Unknown Artist'}</Text>
@@ -209,20 +350,51 @@ const PlaylistScreen = () => {
                   )}
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={{ marginLeft: 12 }}
-                  onPress={() => handleRemoveTrack(track.uri)}
+                  style={{ marginLeft: 12, zIndex: 2 }}
+                  onPress={() => {
+                    if (!track.uri || typeof track.uri !== 'string' || !track.uri.startsWith('spotify:track:')) {
+                      showToast('Invalid track URI', 'error');
+                      console.error('Invalid track URI for removal:', track);
+                      return;
+                    }
+                    handleRemoveTrack(track.uri);
+                  }}
                   disabled={actionLoading === track.uri}
                 >
-                  <Text style={{ color: 'red', fontSize: 12 }}>{actionLoading === track.uri ? '...' : 'Remove'}</Text>
+                  <Ionicons name="remove-circle" size={28} color="red" />
                 </TouchableOpacity>
               </View>
             );
           })}
-          {/* Add Track UI: For demo, add a text input for a track URI */}
-          <View style={{ margin: 16 }}>
-            <Text style={{ color: theme.colors.text, marginBottom: 8 }}>Add Track by URI:</Text>
-            <AddTrackInput onAdd={handleAddTrack} loading={!!actionLoading} />
-          </View>
+          {/* Spacing between tracks and suggestions */}
+          {tracks.length > 0 && suggestedTracks.length > 0 && (
+            <View style={{ height: 32 }} />
+          )}
+          {/* Suggestions section always shown, max 5 random not-in-playlist */}
+          {suggestedTracks.length > 0 && (
+            <View style={{ marginTop: 0 }}>
+              <Text style={[styles.sectionTitle, { color: theme.colors.text, marginLeft: 16 }]}>Suggestions for you</Text>
+              {suggestedTracks.map((track) => (
+                <View key={track.id} style={styles.trackItem}>
+                  <Image
+                    source={track.album?.images && track.album.images[0]?.url ? { uri: track.album.images[0].url } : require('../../assets/images/profile_picture.png')}
+                    style={{ width: 48, height: 48, borderRadius: 8, marginRight: 12, backgroundColor: '#222' }}
+                  />
+                  <View style={styles.trackInfo}>
+                    <Text style={[styles.trackTitle, { color: theme.colors.text }]} numberOfLines={1}>{track.name}</Text>
+                    <Text style={[styles.trackArtist, { color: theme.colors.textSecondary }]} numberOfLines={1}>{track.artists?.map((a: any) => a?.name).filter(Boolean).join(', ')}</Text>
+                  </View>
+                  <TouchableOpacity
+                    style={{ marginLeft: 12 }}
+                    onPress={() => handleAddTrack(track.uri)}
+                    disabled={actionLoading === track.uri}
+                  >
+                    <Ionicons name="add-circle" size={28} color="#1DB954" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
         </ScrollView>
       </ScreenWrapper>
     );
@@ -337,12 +509,19 @@ const styles = StyleSheet.create({
     padding: 20,
     marginTop: 20,
   },
-  playlistImageLarge: {
+  playlistImageLargeContainer: {
     width: 200,
     height: 200,
     borderRadius: 8,
     marginBottom: 20,
-    backgroundColor: '#222',
+    backgroundColor: '#282828',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  playlistImageLarge: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 8,
   },
   playlistItem: {
     flexDirection: 'row',
@@ -376,11 +555,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.1)',
     paddingHorizontal: 16,
-  },
-  trackNumber: {
-    width: 24,
-    textAlign: 'center',
-    marginRight: 12,
   },
   trackInfo: {
     flex: 1,

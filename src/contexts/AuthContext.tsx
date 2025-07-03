@@ -41,57 +41,70 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     getValidToken,
   } = useSpotifyAuth();
 
+  console.log('AuthProvider: useSpotifyAuth state - isAuthenticated:', isAuthenticated, 'accessToken:', !!accessToken);
+
   const [authError, setAuthError] = useState<string | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-
-  // Check if token is expired
-  const isTokenExpired = useCallback((expiration: number | null) => {
-    if (!expiration) return true;
-    return Date.now() >= expiration * 1000;
-  }, []);
+  const [forceUpdate, setForceUpdate] = useState(0); // Force context updates
 
   // Fetch profile helper
   const fetchProfile = useCallback(async () => {
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !accessToken) {
       setProfile(null);
       setProfileImage(null);
       return;
     }
+    
     try {
+      console.log('Fetching profile...');
       const user = await apiRequest(`${SPOTIFY_CONFIG.apiBaseUrl}/me`);
+      console.log('Profile fetched:', user);
       setProfile(user);
       if (user && Array.isArray(user.images) && user.images.length > 0 && user.images[0]?.url) {
+        console.log('Setting profile image to:', user.images[0].url);
         setProfileImage(user.images[0].url);
+        setForceUpdate(prev => prev + 1); // Force context update
       } else {
+        console.log('No profile image found, setting to null');
         setProfileImage(null);
+        setForceUpdate(prev => prev + 1); // Force context update
       }
     } catch (e) {
+      console.error('Failed to fetch profile:', e);
       setProfile(null);
       setProfileImage(null);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, accessToken]);
 
-  // Fetch profile on login, logout, or token change
+  // Fetch profile when authentication state changes
   useEffect(() => {
-    fetchProfile();
-  }, [isAuthenticated, accessToken, refreshToken, fetchProfile]);
+    console.log('Auth state changed - isAuthenticated:', isAuthenticated, 'accessToken:', !!accessToken);
+    if (isAuthenticated && accessToken) {
+      // Fetch profile immediately when authentication is complete
+      fetchProfile();
+    } else {
+      setProfile(null);
+      setProfileImage(null);
+    }
+  }, [isAuthenticated, accessToken, fetchProfile]);
 
   // Handle login
   const login = useCallback(async () => {
     try {
       setAuthError(null);
+      console.log('Starting login process...');
       await spotifyLogin();
-      await fetchProfile();
     } catch (err) {
       console.error('Login error:', err);
       setAuthError('Failed to log in');
     }
-  }, [spotifyLogin, fetchProfile]);
+  }, [spotifyLogin]);
 
   // Handle logout
   const logout = useCallback(async () => {
     try {
+      console.log('Starting logout process...');
       await spotifyLogout();
       setAuthError(null);
       setProfile(null);
@@ -115,63 +128,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [spotifyRefreshToken]);
 
-  // Check authentication status on mount and when tokens change
-  useEffect(() => {
-    const checkAuth = async () => {
-      if (isAuthenticated) return;
-      
-      if (accessToken && expiresIn && !isTokenExpired(expiresIn)) {
-        // Already authenticated by useSpotifyAuth
-        return;
-      } else if (refreshToken) {
-        // Try to refresh the token if it's expired but we have a refresh token
-        await refreshAccessToken();
-      }
-    };
-
-    checkAuth();
-  }, [accessToken, refreshToken, expiresIn, isAuthenticated, isTokenExpired, refreshAccessToken]);
-
-  // Effect to handle token refresh before it expires
-  useEffect(() => {
-    if (!expiresIn || !refreshToken) return;
-
-    const timeUntilExpiry = expiresIn * 1000 - Date.now();
-    const refreshThreshold = 5 * 60 * 1000; // 5 minutes before expiry
-
-    if (timeUntilExpiry <= refreshThreshold) {
-      // Token is about to expire, refresh it
-      refreshAccessToken();
-    } else {
-      // Set a timeout to refresh the token before it expires
-      const timeoutId = setTimeout(() => {
-        refreshAccessToken();
-      }, timeUntilExpiry - refreshThreshold);
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [expiresIn, refreshToken, refreshAccessToken]);
-
   useEffect(() => {
     if (error) {
       console.log('Auth error:', error);
     }
   }, [error]);
 
-  const contextValue = React.useMemo(() => ({
-    isAuthenticated: !!isAuthenticated,
-    isLoading,
-    error: error || authError || null,
-    accessToken,
-    refreshToken,
-    expiresIn,
-    login,
-    logout,
-    refreshAccessToken,
-    getValidToken,
-    profile,
-    profileImage,
-  }), [
+  const contextValue = React.useMemo(() => {
+    console.log('AuthContext: Creating context value - isAuthenticated:', !!isAuthenticated, 'profileImage:', profileImage, 'forceUpdate:', forceUpdate);
+    return {
+      isAuthenticated: !!isAuthenticated,
+      isLoading,
+      error: error || authError || null,
+      accessToken,
+      refreshToken,
+      expiresIn,
+      login,
+      logout,
+      refreshAccessToken,
+      getValidToken,
+      profile,
+      profileImage,
+    };
+  }, [
     isAuthenticated, 
     isLoading, 
     error, 
@@ -185,6 +164,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     getValidToken,
     profile,
     profileImage,
+    forceUpdate, // Include forceUpdate in dependencies
   ]);
 
   if (contextValue.error) {

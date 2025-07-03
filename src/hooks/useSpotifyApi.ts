@@ -2,13 +2,13 @@ import { useState, useCallback } from 'react';
 import { SPOTIFY_CONFIG } from '../config/spotify';
 import { apiRequest, withApiHandler } from '../utils/api';
 import { useNavigation } from '@react-navigation/native';
-import { useSpotifyAuth } from './useSpotifyAuth';
+import { useAuth } from '../contexts/AuthContext';
 
 export const useSpotifyApi = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const navigation = useNavigation();
-  const { refreshAccessToken } = useSpotifyAuth();
+  const { refreshAccessToken } = useAuth();
 
   // Helper function to make API requests with loading and error states
   const makeRequest = useCallback(async <T = any>(
@@ -41,14 +41,18 @@ export const useSpotifyApi = () => {
           !triedRefresh
         ) {
           triedRefresh = true;
-          await refreshAccessToken();
-          // Try the request again after refresh
-          response = await apiRequest<T>(url, {
-            method: options.method || 'GET',
-            body: options.body,
-            headers: options.headers,
-            authRequired: options.authRequired !== false,
-          });
+          const newToken = await refreshAccessToken();
+          if (newToken) {
+            // Try the request again after refresh
+            response = await apiRequest<T>(url, {
+              method: options.method || 'GET',
+              body: options.body,
+              headers: options.headers,
+              authRequired: options.authRequired !== false,
+            });
+          } else {
+            throw new Error('Failed to refresh access token') as any;
+          }
         } else {
           throw err;
         }
@@ -56,9 +60,13 @@ export const useSpotifyApi = () => {
       return response;
     } catch (err: any) {
       setError(err instanceof Error ? err.message : 'An error occurred');
-      // Redirect to AuthScreen if access token expired
-      if (err?.message?.toLowerCase().includes('access token expired')) {
-        navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+      // Only redirect to AuthScreen if we can't refresh the token
+      if (err?.message?.toLowerCase().includes('access token expired') && triedRefresh) {
+        try {
+          navigation.reset({ index: 0, routes: [{ name: 'Login' as any }] });
+        } catch (navError) {
+          console.warn('Navigation error:', navError);
+        }
       }
       throw err;
     } finally {
@@ -227,7 +235,21 @@ export const useSpotifyApi = () => {
     }));
   }, [makeRequest]);
 
+  const updatePlaylistDetails = useCallback(async (playlistId: string, name: string, description: string = '', isPublic: boolean = true) => {
+    return withApiHandler(() => makeRequest(`/playlists/${playlistId}`, {
+      method: 'PUT',
+      body: {
+        name,
+        description,
+        public: isPublic,
+      },
+    }));
+  }, [makeRequest]);
+
   const addTracksToPlaylist = useCallback(async (playlistId: string, uris: string[]) => {
+    if (!Array.isArray(uris) || uris.length === 0 || uris.some(u => typeof u !== 'string' || !u.startsWith('spotify:track:'))) {
+      throw new Error('No valid track URIs provided.');
+    }
     return withApiHandler(() => makeRequest(`/playlists/${playlistId}/tracks`, {
       method: 'POST',
       body: {
@@ -237,11 +259,32 @@ export const useSpotifyApi = () => {
   }, [makeRequest]);
 
   const removeTracksFromPlaylist = useCallback(async (playlistId: string, uris: string[]) => {
-    return withApiHandler(() => makeRequest(`/playlists/${playlistId}/tracks?method=delete`, {
-      method: 'POST',
+    if (!Array.isArray(uris) || uris.length === 0 || uris.some(u => typeof u !== 'string' || !u.startsWith('spotify:track:'))) {
+      throw new Error('No valid track URIs provided.');
+    }
+    return withApiHandler(() => makeRequest(`/playlists/${playlistId}/tracks`, {
+      method: 'DELETE',
       body: {
-        tracks: uris.map(uri => ({ uri })),
+        tracks: uris.map(uri => ({
+          uri: uri,
+          positions: [] // Required by the API, but we're not specifying positions
+        }))
       },
+    }));
+  }, [makeRequest]);
+
+  // New Releases endpoint
+  const getNewReleases = useCallback(async (limit: number = 20, offset: number = 0) => {
+    const params = new URLSearchParams();
+    params.append('limit', limit.toString());
+    params.append('offset', offset.toString());
+    return withApiHandler(() => makeRequest(`/browse/new-releases?${params.toString()}`));
+  }, [makeRequest]);
+
+  const deletePlaylist = useCallback(async (playlistId: string) => {
+    // Spotify API: DELETE /playlists/{playlist_id}/followers
+    return withApiHandler(() => makeRequest(`/playlists/${playlistId}/followers`, {
+      method: 'DELETE',
     }));
   }, [makeRequest]);
 
@@ -267,8 +310,11 @@ export const useSpotifyApi = () => {
     getAlbum,
     getAlbumTracks,
     createPlaylist,
+    updatePlaylistDetails,
     addTracksToPlaylist,
     removeTracksFromPlaylist,
+    getNewReleases,
+    deletePlaylist,
   };
 };
 

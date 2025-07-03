@@ -2,7 +2,9 @@ import TrackPlayer, { Capability, State, usePlaybackState } from 'react-native-t
 import { usePlayback } from '../contexts/PlaybackContext';
 
 export class AdvancedAudioService {
+  static _initialized = false;
   static async initialize() {
+    if (AdvancedAudioService._initialized) return;
     try {
       await TrackPlayer.setupPlayer();
       await TrackPlayer.updateOptions({
@@ -16,6 +18,7 @@ export class AdvancedAudioService {
           Capability.Pause,
         ],
       });
+      AdvancedAudioService._initialized = true;
     } catch (error) {
       console.error('Error initializing TrackPlayer:', error);
     }
@@ -23,6 +26,8 @@ export class AdvancedAudioService {
 
   static async playPreview(previewUrl: string, trackInfo: any, setPreviewState?: (s: any) => void) {
     try {
+      // Pause main playback if possible
+      try { await TrackPlayer.pause(); } catch {}
       await TrackPlayer.reset();
       await TrackPlayer.add({
         id: trackInfo.id,
@@ -40,6 +45,7 @@ export class AdvancedAudioService {
           previewArtist: trackInfo.artist,
           previewArtwork: trackInfo.artwork || null,
           previewTrackId: trackInfo.id,
+          previewArtistId: trackInfo.artistId || null,
         });
       }
     } catch (error) {
@@ -87,4 +93,6 @@ export const getTrackPreview = async (artist: string, title: string) => {
     console.error('Error fetching preview:', error);
     return null;
   }
-}; 
+};
+
+// NOTE: Do NOT call AdvancedAudioService.initialize() anywhere except App.tsx root useEffect! 

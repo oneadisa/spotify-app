@@ -3,71 +3,92 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider } from './src/theme/ThemeProvider';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
-import { PlaybackProvider } from './src/contexts/PlaybackContext';
+import { PlaylistProvider } from './src/contexts/PlaylistContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import * as SplashScreen from 'expo-splash-screen';
-import { View, Text } from 'react-native';
+import { View, Text, AppState, AppStateStatus } from 'react-native';
 import { AdvancedAudioService } from './src/services/audioService';
 import Toast from 'react-native-toast-message';
 
-// Keep the splash screen visible while we fetch resources
-SplashScreen.preventAutoHideAsync();
-
 function AppContent() {
-  const { isLoading, isAuthenticated } = useAuth();
-  const [appIsReady, setAppIsReady] = React.useState(false);
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
 
-  useEffect(() => {
-    console.log('AppContent: appIsReady', appIsReady, 'isLoading', isLoading, 'isAuthenticated', isAuthenticated);
-  }, [appIsReady, isLoading, isAuthenticated]);
-
-  // Load any resources or data that we need prior to rendering the app
   useEffect(() => {
     async function prepare() {
       try {
-        // Pre-load fonts, make any API calls you need to do here
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated loading
+        // Keep the splash screen visible while we fetch resources
+        await SplashScreen.preventAutoHideAsync();
       } catch (e) {
         console.warn(e);
-      } finally {
-        // Tell the application to render
-        setAppIsReady(true);
       }
     }
-
     prepare();
   }, []);
 
-  useEffect(() => {
-    AdvancedAudioService.initialize();
-  }, []);
-
-  // Hide splash screen when app is ready and auth state is loaded
-  const onLayoutRootView = useCallback(async () => {
-    if (appIsReady && !isLoading) {
-      await SplashScreen.hideAsync();
-    }
-  }, [appIsReady, isLoading]);
-
-  if (!appIsReady || isLoading) {
-    console.log('AppContent: Waiting for app to be ready or loading to finish');
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
-        <Text style={{ color: '#333', fontSize: 18 }}>Loading...</Text>
-      </View>
-    );
+  if (authLoading) {
+    return null; // Or a loading indicator
   }
 
   return (
-    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+    <PlaylistProvider>
       <AppNavigator isAuthenticated={isAuthenticated} />
       <Toast />
       <StatusBar style="light" />
-    </View>
+    </PlaylistProvider>
   );
 }
 
-const App = () => {
+export default function App() {
+  // Initialize audio service when app starts
+  useEffect(() => {
+    let isMounted = true;
+
+    const initializeAudio = async () => {
+      try {
+        await AdvancedAudioService.initialize();
+        console.log('Audio service initialized successfully');
+      } catch (error) {
+        console.error('Failed to initialize audio service:', error);
+      }
+    };
+
+    if (isMounted) {
+      initializeAudio();
+    }
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+      // Cleanup audio service if needed
+      AdvancedAudioService.stopPreview();
+    };
+  }, []);
+
+  // Handle app state changes for audio
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', async (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active') {
+        // App has come to the foreground
+        try {
+          await AdvancedAudioService.initialize();
+        } catch (error) {
+          console.error('Error reinitializing audio:', error);
+        }
+      } else if (nextAppState === 'background') {
+        // App has gone to the background
+        try {
+          await AdvancedAudioService.stopPreview();
+        } catch (error) {
+          console.error('Error stopping audio:', error);
+        }
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
   return (
     <SafeAreaProvider>
       <ThemeProvider>
@@ -77,6 +98,4 @@ const App = () => {
       </ThemeProvider>
     </SafeAreaProvider>
   );
-};
-
-export default React.memo(App);
+}

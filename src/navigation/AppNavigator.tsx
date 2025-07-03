@@ -19,16 +19,21 @@ interface AppNavigatorProps {
 }
 
 const AppNavigator: React.FC<AppNavigatorProps> = ({ isAuthenticated }) => {
+  const { isLoading } = useAuth();
+  
   // Handle navigation based on authentication state
   useEffect(() => {
-    if (navigationRef.current) {
+    console.log('AppNavigator: isAuthenticated:', isAuthenticated, 'isLoading:', isLoading);
+    if (navigationRef.current && !isLoading) {
       if (isAuthenticated) {
+        console.log('Navigating to MainTabs');
         // If authenticated, navigate to MainTabs and clear the navigation stack
         navigationRef.current.reset({
           index: 0,
           routes: [{ name: 'MainTabs' }],
         });
       } else {
+        console.log('Navigating to Login');
         // If not authenticated, navigate to Login and clear the navigation stack
         navigationRef.current.reset({
           index: 0,
@@ -36,23 +41,26 @@ const AppNavigator: React.FC<AppNavigatorProps> = ({ isAuthenticated }) => {
         });
       }
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isLoading]);
 
   const theme = useTheme();
 
   return (
-    <NavigationContainer ref={navigationRef} theme={{
-      dark: theme.dark,
-      colors: {
-        primary: theme.colors.primary,
-        background: theme.colors.background,
-        card: theme.colors.card,
-        text: theme.colors.text,
-        border: theme.colors.border,
-        notification: theme.colors.notification,
-      },
-      fonts: DefaultTheme.fonts,
-    }}>
+    <NavigationContainer 
+      ref={navigationRef} 
+      theme={{
+        dark: theme.dark,
+        colors: {
+          primary: theme.colors.primary,
+          background: theme.colors.background,
+          card: theme.colors.card,
+          text: theme.colors.text,
+          border: theme.colors.border,
+          notification: theme.colors.notification,
+        },
+        fonts: DefaultTheme.fonts,
+      }}
+    >
       <PlaybackProvider>
         <RootStack.Navigator
           screenOptions={{

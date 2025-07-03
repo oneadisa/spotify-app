@@ -15,7 +15,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { RootStackParamList } from "../navigation/types";
-import { useSpotifyAuth } from "../hooks/useSpotifyAuth";
+import { useAuth } from "../contexts/AuthContext";
 import PhoneIcon from "../components/icons/PhoneIcon";
 import GoogleIcon from "../components/icons/GoogleIcon";
 import FacebookIcon from "../components/icons/FacebookIcon";
@@ -31,7 +31,7 @@ const AuthScreen: React.FC = () => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
 
-  const { login, isAuthenticated, isLoading, error } = useSpotifyAuth();
+  const { login, isAuthenticated, isLoading, error } = useAuth();
 
   const isLoggingIn = isLoading;
 
@@ -45,29 +45,25 @@ const AuthScreen: React.FC = () => {
   }, [fadeAnim]);
 
   useEffect(() => {
+    console.log('AuthScreen: isAuthenticated changed to:', isAuthenticated);
     if (isAuthenticated) {
+      console.log('AuthScreen: Navigating to MainTabs');
       navigation.replace("MainTabs");
     }
   }, [isAuthenticated, navigation]);
 
   useEffect(() => {
     if (error) {
-      const buttons = [
-        {
-          text: "OK",
-          style: "default" as const,
-        },
-      ];
-
-      if (error.includes("network")) {
-        buttons.push({
-          text: "Retry",
-          style: "destructive" as const,
-          onPress: () => login(),
-        });
-      }
-
-      Alert.alert("Authentication Error", error, buttons);
+      Alert.alert(
+        "Authentication Error", 
+        error, 
+        error.includes("network") 
+          ? [
+              { text: "OK", style: "default" },
+              { text: "Retry", style: "default", onPress: () => login() }
+            ]
+          : [{ text: "OK", style: "default" }]
+      );
     }
   }, [error, login]);
 

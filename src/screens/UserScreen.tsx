@@ -9,6 +9,7 @@ import { RootStackParamList } from '../navigation/types';
 import { Ionicons } from '@expo/vector-icons';
 import BackButton from '../components/icons/back.tsx';
 import { showToast } from '../utils/toast';
+import NowPlayingBar from '../components/playlist/NowPlayingBar/NowPlayingBar';
 
 const { height } = Dimensions.get('window');
 
@@ -66,7 +67,7 @@ const UserScreen = () => {
           <BackButton />
         </TouchableOpacity>
       </View>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingBottom: 80 }}>
         <View style={{ alignItems: 'center', marginBottom: 24, marginTop: 32 }}>
           <Image
             source={profileImage ? { uri: profileImage } : require('../../assets/images/profile_picture.png')}

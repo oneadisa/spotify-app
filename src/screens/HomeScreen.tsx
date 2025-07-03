@@ -8,6 +8,8 @@ import {
   StyleSheet,
   SafeAreaView,
   StatusBar,
+  ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import NowPlayingBar from '../components/playlist/NowPlayingBar/NowPlayingBar.tsx';
@@ -18,185 +20,248 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/types';
 import { showToast } from '../utils/toast';
+import { useTheme } from '../theme/ThemeProvider';
 
-// Import images
-const justHitsImg = require('../../assets/images/homescreen/musictiles/just_hits.png');
-const christmasVibesImg = require('../../assets/images/homescreen/musictiles/christmas_vibes.png');
-const onRepeatImg = require('../../assets/images/homescreen/musictiles/on_repeat.png');
-const dailyMix1Img = require('../../assets/images/homescreen/musictiles/daily_mix_1.png');
-const baddieImg = require('../../assets/images/homescreen/musictiles/baddie.png');
-const arianaGrandeRadioImg = require('../../assets/images/homescreen/musictiles/ariana_grande_radio.png');
-const kpopGamingImg = require('../../assets/images/homescreen/musictiles/k-pop_gaming.png');
-const missedHitsImg = require('../../assets/images/homescreen/musictiles/missed_hits.png');
+const fallbackTileImages = [
+  require('../../assets/images/homescreen/musictiles/just_hits.png'),
+  require('../../assets/images/homescreen/musictiles/christmas_vibes.png'),
+  require('../../assets/images/homescreen/musictiles/on_repeat.png'),
+  require('../../assets/images/homescreen/musictiles/daily_mix_1.png'),
+  require('../../assets/images/homescreen/musictiles/baddie.png'),
+  require('../../assets/images/homescreen/musictiles/ariana_grande_radio.png'),
+  require('../../assets/images/homescreen/musictiles/k-pop_gaming.png'),
+  require('../../assets/images/homescreen/musictiles/missed_hits.png'),
+];
 
-type MusicTileItem = {
-  id: number;
-  title: string;
-  image: any; // Using 'any' for require() return type
-  backgroundColor: string;
-  hasRepeatIcon?: boolean;
-  isMissedHits?: boolean;
-};
-
-const MusicApp = () => {
-  // const { getCurrentUserProfile } = useSpotifyApi();
-  const { isAuthenticated, profileImage } = useAuth();
+const HomeScreen = () => {
+  const { isAuthenticated, profileImage, logout } = useAuth();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const { themePreference, setThemePreference, isDarkMode, colors } = useTheme();
+  const {
+    getRecentlyPlayed,
+    getUserTopItems,
+    getNewReleases,
+    isLoading: apiLoading,
+    error: apiError,
+  } = useSpotifyApi();
 
-  const categories = [
-    { id: 1, title: 'All', active: true },
-    { id: 2, title: 'Music', active: false },
-    { id: 3, title: 'Podcasts', active: false },
-    { id: 4, title: 'Wrapped', active: false, outlined: true },
-  ];
+  // State for each section
+  const [recentlyPlayed, setRecentlyPlayed] = useState<any[]>([]);
+  const [recentlyPlayedLoading, setRecentlyPlayedLoading] = useState(true);
+  const [recentlyPlayedError, setRecentlyPlayedError] = useState<string | null>(null);
+  const [activePill, setActivePill] = useState<string>('All');
 
-  const musicTiles: MusicTileItem[] = [
-    {
-      id: 1,
-      title: 'just hits',
-      image: justHitsImg,
-      backgroundColor: '#2a2a2a',
-    },
-    {
-      id: 2,
-      title: 'Christmas Vibes 2023 🎄',
-      image: christmasVibesImg,
-      backgroundColor: '#2a2a2a',
-    },
-    {
-      id: 3,
-      title: 'On Repeat',
-      image: onRepeatImg,
-      backgroundColor: '#2a2a2a',
-      hasRepeatIcon: true,
-    },
-    {
-      id: 4,
-      title: 'Daily Mix 1',
-      image: dailyMix1Img,
-      backgroundColor: '#2a2a2a',
-    },
-    {
-      id: 5,
-      title: 'baddie.',
-      image: baddieImg,
-      backgroundColor: '#2a2a2a',
-    },
-    {
-      id: 6,
-      title: 'Ariana Grande Radio',
-      image: arianaGrandeRadioImg,
-      backgroundColor: '#2a2a2a',
-    },
-    {
-      id: 7,
-      title: 'K-Pop Gaming',
-      image: kpopGamingImg,
-      backgroundColor: '#2a2a2a',
-    },
-    {
-      id: 8,
-      title: 'Missed Hits',
-      image: missedHitsImg,
-      backgroundColor: '#2a2a2a',
-      // isMissedHits: true,
-    },
-  ];
+  const [newReleases, setNewReleases] = useState<any[]>([]);
+  const [newReleasesLoading, setNewReleasesLoading] = useState(true);
+  const [newReleasesError, setNewReleasesError] = useState<string | null>(null);
 
-  const CategoryButton = ({ title, active, outlined }: { title: string; active: boolean; outlined?: boolean }) => (
+  const [topArtists, setTopArtists] = useState<any[]>([]);
+  const [topArtistsLoading, setTopArtistsLoading] = useState(true);
+  const [topArtistsError, setTopArtistsError] = useState<string | null>(null);
+
+  const [topMixes, setTopMixes] = useState<any[]>([]);
+  const [topMixesLoading, setTopMixesLoading] = useState(true);
+  const [topMixesError, setTopMixesError] = useState<string | null>(null);
+
+  const [isSettingsVisible, setIsSettingsVisible] = useState(false);
+
+  // Fetch Recently Played
+  useEffect(() => {
+    setRecentlyPlayedLoading(true);
+    getRecentlyPlayed(8)
+      .then((data) => {
+        setRecentlyPlayed(data?.items?.slice(0, 8) || []);
+        setRecentlyPlayedError(null);
+      })
+      .catch((e) => setRecentlyPlayedError('Failed to load recently played'))
+      .finally(() => setRecentlyPlayedLoading(false));
+  }, []);
+
+  // Fetch New Releases
+  useEffect(() => {
+    setNewReleasesLoading(true);
+    getNewReleases(10)
+      .then((data) => {
+        setNewReleases(data?.albums?.items || []);
+        setNewReleasesError(null);
+      })
+      .catch((e) => setNewReleasesError('Failed to load new releases'))
+      .finally(() => setNewReleasesLoading(false));
+  }, []);
+
+  // Fetch Top Artists
+  useEffect(() => {
+    setTopArtistsLoading(true);
+    getUserTopItems('artists', { limit: 10 })
+      .then((data) => {
+        setTopArtists(data?.items || []);
+        setTopArtistsError(null);
+      })
+      .catch((e) => setTopArtistsError('Failed to load artists'))
+      .finally(() => setTopArtistsLoading(false));
+  }, []);
+
+  // Fetch Top Mixes (tracks)
+  useEffect(() => {
+    setTopMixesLoading(true);
+    getUserTopItems('tracks', { limit: 10 })
+      .then((data) => {
+        setTopMixes(data?.items || []);
+        setTopMixesError(null);
+      })
+      .catch((e) => setTopMixesError('Failed to load top mixes'))
+      .finally(() => setTopMixesLoading(false));
+  }, []);
+
+  // Debug: log themePreference and colors on each render
+  useEffect(() => {
+    console.log('themePreference:', themePreference, 'colors:', colors);
+  }, [themePreference, colors]);
+
+  // Music Tile (Recently Played, grid style)
+  const MusicTile = ({ item, idx }: { item: any; idx: number }) => (
     <TouchableOpacity
-      style={[
-        styles.categoryButton,
-        active && styles.activeCategoryButton,
-        outlined && styles.outlinedCategoryButton,
-      ]}
-    >
-      <Text
-        style={[
-          styles.categoryText,
-          active && styles.activeCategoryText,
-          outlined && styles.outlinedCategoryText,
-        ]}
-      >
-        {title}
-      </Text>
-    </TouchableOpacity>
-  );
-
-  const MusicTile = ({ item }: { item: MusicTileItem }) => (
-    <TouchableOpacity 
-      style={[
-        styles.musicTile, 
-        { backgroundColor: item.backgroundColor }
-      ]}
+      style={styles.musicTile}
+      onPress={() => {
+        if (item.track) {
+          navigation.navigate('PlayerScreen');
+        } else if (item.context?.type === 'playlist') {
+          navigation.navigate('Playlist', { id: item.context.uri.split(':').pop() });
+        }
+      }}
     >
       <View style={styles.tileContent}>
-        {item.image && (
-          <Image source={item.image} style={styles.tileImage} />
-        )}
-        {/* {item.hasRepeatIcon && (
-          <View style={styles.repeatIconContainer}>
-            <MaterialIcons name="repeat" size={24} color="#1DB954" />
-          </View>
-        )} */}
-        {item.isMissedHits && (
-          <View style={styles.missedHitsContainer}>
-            <Text style={styles.missedHitsLabel}>Missed Hits</Text>
-          </View>
-        )}
+        <Image
+          source={item.track?.album?.images?.[0]?.url ? { uri: item.track.album.images[0].url } : fallbackTileImages[idx % fallbackTileImages.length]}
+          style={styles.tileImage}
+        />
         <Text style={styles.tileTitle} numberOfLines={2}>
-          {item.title}
+          {item.track?.name || 'Unknown'}
         </Text>
       </View>
     </TouchableOpacity>
   );
+
+  // Artist Card
+  const ArtistCard = ({ artist }: { artist: any }) => (
+    <TouchableOpacity
+      style={styles.artistCard}
+      onPress={() => navigation.navigate('Artist', { id: artist.id, name: artist.name })}
+    >
+      <Image
+        source={artist.images?.[0]?.url ? { uri: artist.images[0].url } : require('../../assets/images/profile_picture.png')}
+        style={styles.artistImage}
+      />
+      <Text style={styles.artistName} numberOfLines={1}>{artist.name}</Text>
+    </TouchableOpacity>
+  );
+
+  // Album Card (New Releases)
+  const AlbumCard = ({ album }: { album: any }) => (
+    <TouchableOpacity
+      style={styles.albumCard}
+      onPress={() => navigation.navigate('Album', { id: album.id, name: album.name })}
+    >
+      <Image
+        source={album.images?.[0]?.url ? { uri: album.images[0].url } : require('../../assets/images/profile_picture.png')}
+        style={styles.albumImage}
+      />
+      <Text style={styles.albumName} numberOfLines={1}>{album.name}</Text>
+      <Text style={styles.albumArtist} numberOfLines={1}>{album.artists?.map((a: any) => a.name).join(', ')}</Text>
+    </TouchableOpacity>
+  );
+
+  // Top Mix Card (Track)
+  const MixCard = ({ track }: { track: any }) => (
+    <TouchableOpacity
+      style={styles.mixCard}
+      onPress={() => navigation.navigate('PlayerScreen')}
+    >
+      <Image
+        source={track.album?.images?.[0]?.url ? { uri: track.album.images[0].url } : require('../../assets/images/profile_picture.png')}
+        style={styles.mixImage}
+      />
+      <Text style={styles.mixName} numberOfLines={1}>{track.name}</Text>
+      <Text style={styles.mixArtist} numberOfLines={1}>{track.artists?.map((a: any) => a.name).join(', ')}</Text>
+    </TouchableOpacity>
+  );
+
+  const handleThemeToggle = async () => {
+    const next =
+      themePreference === 'light'
+        ? 'dark'
+        : themePreference === 'dark'
+        ? 'system'
+        : 'light';
+    await setThemePreference(next);
+    showToast(`Theme set to ${next}`, 'info');
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    showToast('Logged out', 'success');
+    navigation.replace('Login');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
-      
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.profileContainer}>
           <TouchableOpacity onPress={() => { navigation.navigate('User'); showToast('Profile opened', 'info'); }}>
             <Image
+              key={profileImage || 'default'}
               source={profileImage ? { uri: profileImage } : require('../../assets/images/profile_picture.png')}
               style={styles.profileImage}
             />
           </TouchableOpacity>
-        </View>
-        
+          {/* Pills beside profile picture */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoriesContainer}
+            contentContainerStyle={styles.pillsRow}
         >
-          {categories.map((category) => (
-            <CategoryButton
-              key={category.id}
-              title={category.title}
-              active={category.active}
-              outlined={category.outlined}
-            />
+            {['All', 'Music', 'Podcasts', 'Wrapped'].map((pill) => (
+              <TouchableOpacity 
+                key={pill}
+                style={[
+                  styles.pill, 
+                  activePill === pill && styles.pillActive
+                ]}
+                onPress={() => setActivePill(pill)}
+              >
+                <Text style={[
+                  styles.pillText, 
+                  activePill === pill && styles.pillTextActive
+                ]}>
+                  {pill}
+                </Text>
+              </TouchableOpacity>
           ))}
         </ScrollView>
+          <TouchableOpacity onPress={() => setIsSettingsVisible(true)} style={{ marginLeft: 30 }}>
+            <Ionicons name="settings-outline" size={28} color={colors.text} />
+          </TouchableOpacity>
       </View>
 
-      <ScrollView 
-        style={styles.content} 
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* Main Grid */}
-        <View style={styles.grid}>
-          {musicTiles.map((item) => (
-            <MusicTile key={item.id} item={item} />
+        {/* Music Tiles Grid (Recently Played) */}
+        <Text style={styles.sectionTitle}>Recently played</Text>
+        {recentlyPlayedLoading ? (
+          <ActivityIndicator color="#1DB954" style={{ marginVertical: 16 }} />
+        ) : recentlyPlayedError ? (
+          <Text style={styles.errorText}>{recentlyPlayedError}</Text>
+        ) : (
+          <View style={styles.musicTilesGrid}>
+            {recentlyPlayed.map((item, idx) => (
+              <MusicTile key={item.played_at || idx} item={item} idx={idx} />
           ))}
         </View>
+        )}
 
-        {/* Picked for you section */}
+        {/* Picked for you section (unchanged) */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Picked for you</Text>
-          
           <TouchableOpacity style={styles.pickedCard}>
             <Image
               source={require('../../assets/images/picked.png')}
@@ -222,33 +287,115 @@ const MusicApp = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Trending albums section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Trending albums for you</Text>
-          
-          <TouchableOpacity style={styles.trendingCard}>
-            <Image
-              source={{ uri: 'https://picsum.photos/60/60?random=album' }}
-              style={styles.trendingImage}
-            />
-            <View style={styles.trendingContent}>
-              <Text style={styles.trendingTitle}>Paint The Town Red</Text>
-              <Text style={styles.trendingArtist}>Doja Cat</Text>
-            </View>
-            <TouchableOpacity style={styles.moreButton}>
-              <Ionicons name="ellipsis-horizontal" size={20} color="#b3b3b3" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.playButtonSmall}>
-              <Ionicons name="play" size={16} color="#000" />
-            </TouchableOpacity>
-          </TouchableOpacity>
-        </View>
+        {/* New Releases */}
+        <Text style={styles.sectionTitle}>New releases for you</Text>
+        {newReleasesLoading ? (
+          <ActivityIndicator color="#1DB954" style={{ marginVertical: 16 }} />
+        ) : newReleasesError ? (
+          <Text style={styles.errorText}>{newReleasesError}</Text>
+        ) : (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.albumRow}>
+            {newReleases.map((album, idx) => (
+              <AlbumCard key={album.id || idx} album={album} />
+            ))}
+          </ScrollView>
+        )}
+
+        {/* Your Top Mixes */}
+        <Text style={styles.sectionTitle}>Your top mixes</Text>
+        {topMixesLoading ? (
+          <ActivityIndicator color="#1DB954" style={{ marginVertical: 16 }} />
+        ) : topMixesError ? (
+          <Text style={styles.errorText}>{topMixesError}</Text>
+        ) : (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mixRow}>
+            {topMixes.map((track, idx) => (
+              <MixCard key={track.id || idx} track={track} />
+            ))}
+          </ScrollView>
+        )}
+
+        {/* My Artists */}
+        <Text style={styles.sectionTitle}>My artists</Text>
+        {topArtistsLoading ? (
+          <ActivityIndicator color="#1DB954" style={{ marginVertical: 16 }} />
+        ) : topArtistsError ? (
+          <Text style={styles.errorText}>{topArtistsError}</Text>
+        ) : (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.artistRow}>
+            {topArtists.map((artist, idx) => (
+              <ArtistCard key={artist.id || idx} artist={artist} />
+            ))}
+          </ScrollView>
+        )}
       </ScrollView>
-      
       <NowPlayingBar />
+      {/* Settings Bottom Sheet Modal */}
+      <Modal
+        visible={isSettingsVisible}
+        onRequestClose={() => setIsSettingsVisible(false)}
+        transparent
+        animationType="slide"
+      >
+        <TouchableOpacity
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' }}
+          activeOpacity={1}
+          onPress={() => setIsSettingsVisible(false)}
+        />
+        <View style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: '#181818',
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          padding: 24,
+          paddingBottom: 40,
+        }}>
+          <View style={{ alignItems: 'center', marginBottom: 16 }}>
+            <View style={{
+              width: 40,
+              height: 5,
+              borderRadius: 3,
+              backgroundColor: '#444',
+              alignSelf: 'center',
+              marginBottom: 8,
+            }} />
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+            {/* Theme toggle button hidden */}
+            {/* <TouchableOpacity style={{
+              paddingVertical: 6,
+              paddingHorizontal: 12,
+              backgroundColor: '#222',
+              borderRadius: 20,
+              marginRight: 8,
+            }} onPress={handleThemeToggle}>
+              <Text style={{ color: '#fff', fontSize: 18 }}>
+                {themePreference === 'light' ? '☀️' : themePreference === 'dark' ? '🌙' : '🖥️'}
+              </Text>
+            </TouchableOpacity> */}
+            <TouchableOpacity
+              style={{
+                padding: 16,
+                backgroundColor: '#1DB954',
+                borderRadius: 32,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginHorizontal: 8,
+              }}
+              onPress={handleLogout}
+            >
+              <Ionicons name="log-out-outline" size={32} color="#000" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -260,55 +407,67 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingTop: 8,
     backgroundColor: '#000',
-  },
-  profileContainer: {
-    marginRight: 16,
+    justifyContent: 'space-between',
   },
   profileImage: {
     width: 32,
     height: 32,
     borderRadius: 16,
   },
-  categoriesContainer: {
-    paddingHorizontal: 12,
+  pillsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 16,
+  },
+  pill: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#292929',
+    borderRadius: 20,
+    marginRight: 8,
+  },
+  pillActive: {
+    backgroundColor: '#1DB954',
+  },
+  pillText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  pillTextActive: {
+    color: '#000',
+    fontWeight: 'bold',
+  },
+  pillOutlined: {
+    backgroundColor: '#292929',
+    borderRadius: 20,
+    marginRight: 8,
+  },
+  pillTextOutlined: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
   content: {
     flex: 1,
     padding: 12,
   },
-  scrollContent: {
-    paddingBottom: 24,
-  },
-  categoryButton: {
-    backgroundColor: '#333',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 8,
-  },
-  activeCategoryButton: {
-    backgroundColor: '#1DB954',
-  },
-  outlinedCategoryButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: '#b3b3b3',
-  },
-  categoryText: {
+  sectionTitle: {
     color: '#fff',
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginTop: 24,
+    marginBottom: 16,
   },
-  activeCategoryText: {
-    color: '#000',
+  errorText: {
+    color: 'red',
+    marginVertical: 8,
   },
-  outlinedCategoryText: {
-    color: '#b3b3b3',
-  },
-  grid: {
+  musicTilesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+    marginBottom: 8,
   },
   musicTile: {
     width: '48%',
@@ -316,44 +475,20 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     marginBottom: 12,
     overflow: 'hidden',
+    backgroundColor: '#222',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   tileContent: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    // paddingHorizontal: 12,
-    // paddingVertical: 8,
   },
   tileImage: {
     width: 56,
     height: '100%',
     borderRadius: 0,
     marginRight: 12,
-  },
-  repeatIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(29, 185, 84, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  missedHitsContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 4,
-    backgroundColor: 'rgba(29, 185, 84, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  missedHitsLabel: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    lineHeight: 12,
   },
   tileTitle: {
     color: '#fff',
@@ -362,21 +497,87 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 18,
   },
-  section: {
-    marginTop: 32,
-    marginBottom: 16,
+  albumRow: {
+    flexDirection: 'row',
+    marginBottom: 8,
   },
-  sectionTitle: {
+  albumCard: {
+    width: 120,
+    marginRight: 12,
+    alignItems: 'center',
+  },
+  albumImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  albumName: {
     color: '#fff',
-    fontSize: 22,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  albumArtist: {
+    color: '#b3b3b3',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  mixRow: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  mixCard: {
+    width: 120,
+    marginRight: 12,
+    alignItems: 'center',
+  },
+  mixImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  mixName: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  mixArtist: {
+    color: '#b3b3b3',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  artistRow: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  artistCard: {
+    width: 90,
+    marginRight: 12,
+    alignItems: 'center',
+  },
+  artistImage: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    marginBottom: 8,
+  },
+  artistName: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  section: {
+    marginTop: 12,
     marginBottom: 16,
   },
   pickedCard: {
     backgroundColor: '#1a1a1a',
     borderRadius: 8,
     height: 152,
-    // padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -404,7 +605,7 @@ const styles = StyleSheet.create({
   },
   pickedTitle: {
     color: '#fff',
-    fontSize: 13,
+    fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 4,
   },
@@ -421,9 +622,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
   },
-  addButton: {
-    
-  },
+  addButton: {},
   playButton: {
     backgroundColor: '#fff',
     width: 40,
@@ -432,64 +631,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  trendingCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1a1a1a',
-    borderRadius: 8,
-    padding: 12,
-  },
-  trendingImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 4,
-    marginRight: 12,
-  },
-  trendingContent: {
-    flex: 1,
-  },
-  trendingTitle: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  trendingArtist: {
-    color: '#b3b3b3',
-    fontSize: 14,
-  },
-  moreButton: {
-    marginRight: 12,
-  },
-  playButtonSmall: {
-    backgroundColor: '#1DB954',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    backgroundColor: '#000',
-    paddingVertical: 8,
-    paddingBottom: 20,
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  navItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  navText: {
-    color: '#fff',
-    fontSize: 12,
-    marginTop: 4,
-    fontWeight: '500',
-  },
 });
 
-export default MusicApp;
+export default HomeScreen;

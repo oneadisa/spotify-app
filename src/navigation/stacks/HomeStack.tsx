@@ -2,7 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { HomeStackParamList } from '../types.ts';
 import { HomeScreen, PlaylistScreen, ArtistScreen } from '../../screens/index.ts';
-import PlayerScreen from '../../screens/ProfileScreen.tsx';
+import NowPlayingScreen from '../../screens/NowPlayingScreen.tsx';
 
 const Stack = createNativeStackNavigator<HomeStackParamList>();
 
@@ -12,6 +12,8 @@ export const HomeStackNavigator = () => {
       screenOptions={{
         headerShown: false,
         animation: 'slide_from_right',
+        gestureEnabled: true,
+        fullScreenGestureEnabled: true,
       }}
     >
       <Stack.Screen name="Home" component={HomeScreen} />
@@ -31,7 +33,7 @@ export const HomeStackNavigator = () => {
       />
       <Stack.Screen 
         name="PlayerScreen" 
-        component={PlayerScreen}
+        component={NowPlayingScreen}
         options={{
           headerShown: false,
         }}

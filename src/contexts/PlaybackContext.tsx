@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useSpotifyApi } from '../hooks/useSpotifyApi';
 import { useAuth } from './AuthContext';
+import { showToast } from '../utils/toast';
 
 interface PlaybackState {
   track: any;
@@ -26,6 +27,7 @@ interface PreviewState {
   previewArtist: string;
   previewArtwork: string | null;
   previewTrackId: string | null;
+  previewArtistId: string | null;
 }
 
 const PlaybackContext = createContext<
@@ -55,6 +57,7 @@ export const PlaybackProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     previewArtist: '',
     previewArtwork: null,
     previewTrackId: null,
+    previewArtistId: null,
   });
   const setPreviewState = (s: Partial<PreviewState>) => setPreviewStateInternal(prev => ({ ...prev, ...s }));
 
@@ -93,10 +96,34 @@ export const PlaybackProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [fetchPlayback]);
 
   const play = useCallback(async () => {
-    await startPlayback();
-    setIsPlaying(true);
-    fetchPlayback();
-  }, [startPlayback, fetchPlayback]);
+    setPreviewState({ isPreviewPlaying: false, previewTrackId: null }); // Reset preview state
+    try {
+      // Defensive: Only call startPlayback if there is a valid track
+      if (!track || !track.uri) {
+        console.warn('No track to play');
+        return;
+      }
+      // If song is finished, restart from beginning
+      if (progress >= duration - 1000) {
+        const uris = [track.uri];
+        if (!uris || !Array.isArray(uris) || uris.length === 0 || uris.some(u => typeof u !== 'string' || !u.startsWith('spotify:track:'))) {
+          showToast('No valid track URIs provided.', 'error');
+          console.error('No valid track URIs provided:', uris);
+          return;
+        }
+        console.log('Calling startPlayback with uris (restart):', uris);
+        await startPlayback({ uris });
+      } else {
+        // Resume playback
+        console.log('Calling startPlayback with no uris (resume)');
+        await startPlayback({});
+      }
+      setIsPlaying(true);
+      fetchPlayback();
+    } catch (e) {
+      console.error('Playback error:', e);
+    }
+  }, [startPlayback, fetchPlayback, setPreviewState, track, progress, duration]);
 
   const pause = useCallback(async () => {
     await pausePlayback();

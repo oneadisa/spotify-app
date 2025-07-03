@@ -2,7 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LibraryStackParamList } from '../types.ts';
 import { LibraryScreen, PlaylistScreen, ArtistScreen } from '../../screens/index.ts';
-import PlayerScreen from '../../screens/ProfileScreen.tsx';
+import NowPlayingScreen from '../../screens/NowPlayingScreen.tsx';
 
 const Stack = createNativeStackNavigator<LibraryStackParamList>();
 
@@ -12,6 +12,8 @@ export const LibraryStackNavigator = () => {
       screenOptions={{
         headerShown: false,
         animation: 'slide_from_right',
+        gestureEnabled: true,
+        fullScreenGestureEnabled: true,
       }}
     >
       <Stack.Screen name="Library" component={LibraryScreen} />
@@ -19,25 +21,20 @@ export const LibraryStackNavigator = () => {
         name="Playlist" 
         component={PlaylistScreen}
         options={{
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: '',
-          headerTintColor: 'white',
+          headerShown: false,
         }}
       />
       <Stack.Screen 
         name="Artist" 
         component={ArtistScreen}
         options={{
-          headerShown: true,
-          headerTransparent: true,
-          headerTitle: '',
-          headerTintColor: 'white',
+          headerShown: false,
+        
         }}
       />
       <Stack.Screen 
         name="PlayerScreen" 
-        component={PlayerScreen}
+        component={NowPlayingScreen}
         options={{
           headerShown: false,
         }}
