@@ -31,7 +31,7 @@ export const MainTabs: React.FC = () => {
           const renderTabBarIcon = (routeName: keyof MainTabsParamList, focused: boolean) => {
             const baseIconProps = { size: 24 };
             const inactiveColor = theme.colors.textSecondary;
-            const activeColor = routeName === 'LibraryTab' ? '#fff' : theme.colors.primary;
+            const activeColor = theme.colors.primary;
             const iconColor = focused ? activeColor : inactiveColor;
             const iconProps = { ...baseIconProps, color: iconColor };
 
@@ -41,7 +41,7 @@ export const MainTabs: React.FC = () => {
               case 'SearchTab':
                 return focused ? <SearchIcon {...iconProps} /> : <SearchOutlineIcon {...iconProps} />;
               case 'LibraryTab':
-                return focused ? <LibraryIcon color="#fff" size={24} /> : <LibraryOutlineIcon {...iconProps} />;
+                return focused ? <LibraryIcon {...iconProps} /> : <LibraryOutlineIcon {...iconProps} />;
               default:
                 return <HomeOutlineIcon {...iconProps} />;
             }
@@ -52,8 +52,8 @@ export const MainTabs: React.FC = () => {
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: '#000000',
-          borderTopColor: '#282828',
+          backgroundColor: theme.colors.background,
+          borderTopColor: theme.colors.border,
           borderTopWidth: 1,
         },
         headerShown: false,
@@ -84,13 +84,6 @@ export const MainTabs: React.FC = () => {
           title: 'Your Library',
           // @ts-ignore - testID is a valid prop for testing
           tabBarTestID: 'library-tab',
-          tabBarActiveTintColor: '#fff',
-          tabBarInactiveTintColor: theme.colors.textSecondary,
-          tabBarStyle: {
-            backgroundColor: '#121212',
-            borderTopColor: '#282828',
-            borderTopWidth: 1,
-          },
         }}
       />
     </Tab.Navigator>

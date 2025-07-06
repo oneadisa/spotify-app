@@ -53,7 +53,7 @@ const PlaylistScreen = () => {
           dialogTitle: `Share ${playlistDetails.name}`,
           subject: `Check out this playlist: ${playlistDetails.name}`,
           // @ts-ignore - iOS only
-          tintColor: '#1DB954'
+          tintColor: theme.colors.primary
         });
       } else {
         // Fallback to copying the message to clipboard if no URL is available
@@ -267,6 +267,87 @@ const PlaylistScreen = () => {
     }
   }, [playlists, playlistId]);
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      paddingTop: 8,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      marginBottom: 8,
+    },
+    sectionTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      marginTop: 24,
+      marginBottom: 8,
+    },
+    header: {
+      alignItems: 'center',
+      padding: 20,
+      marginTop: 20,
+    },
+    playlistImageLargeContainer: {
+      width: 200,
+      height: 200,
+      borderRadius: 8,
+      marginBottom: 20,
+      backgroundColor: theme.colors.card,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    playlistImageLarge: {
+      width: '100%',
+      height: '100%',
+      borderRadius: 8,
+    },
+    playlistItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+    },
+    playlistImage: {
+      width: 60,
+      height: 60,
+      borderRadius: 8,
+      marginRight: 16,
+      backgroundColor: theme.colors.card,
+    },
+    playlistInfo: {
+      flex: 1,
+    },
+    playlistName: {
+      fontSize: 18,
+      fontWeight: '600',
+    },
+    playlistDesc: {
+      fontSize: 14,
+      opacity: 0.7,
+    },
+    trackItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+      paddingHorizontal: 16,
+    },
+    trackInfo: {
+      flex: 1,
+    },
+    trackTitle: {
+      fontSize: 16,
+      marginBottom: 4,
+    },
+    trackArtist: {
+      fontSize: 14,
+      opacity: 0.7,
+    },
+  });
+
   if (loading) {
     return (
       <ScreenWrapper>
@@ -278,7 +359,7 @@ const PlaylistScreen = () => {
   if (fetchError) {
     return (
       <ScreenWrapper>
-        <Text style={{ color: 'red', textAlign: 'center', marginTop: 20 }}>{fetchError}</Text>
+        <Text style={{ color: theme.colors.error, textAlign: 'center', marginTop: 20 }}>{fetchError}</Text>
       </ScreenWrapper>
     );
   }
@@ -314,7 +395,7 @@ const PlaylistScreen = () => {
                   style={styles.playlistImageLarge}
                 />
               ) : (
-                <Ionicons name="musical-notes" size={60} color="#b3b3b3" />
+                <Ionicons name="musical-notes" size={60} color={theme.colors.textSecondary} />
               )}
             </View>
             <Text style={[styles.playlistName, { color: theme.colors.text }]}>{playlistDetails?.name || 'Playlist'}</Text>
@@ -332,7 +413,7 @@ const PlaylistScreen = () => {
               <View key={track.id || idx} style={styles.trackItem}>
                 <Image
                   source={track.album?.images && track.album.images[0]?.url ? { uri: track.album.images[0].url } : require('../../assets/images/profile_picture.png')}
-                  style={{ width: 48, height: 48, borderRadius: 8, marginRight: 12, backgroundColor: '#222' }}
+                  style={{ width: 48, height: 48, borderRadius: 8, marginRight: 12, backgroundColor: theme.colors.card }}
                 />
                 <View style={styles.trackInfo}>
                   <Text style={[styles.trackTitle, { color: theme.colors.text }]} numberOfLines={1}>{track.name}</Text>
@@ -344,9 +425,9 @@ const PlaylistScreen = () => {
                   disabled={audioLoading && previewingTrackId === track.id}
                 >
                   {audioLoading && previewingTrackId === track.id ? (
-                    <ActivityIndicator color="#1DB954" size={20} />
+                    <ActivityIndicator color={theme.colors.primary} size={20} />
                   ) : (
-                    <Ionicons name={isPlaying && previewingTrackId === track.id ? 'stop-circle' : 'play-circle'} size={28} color="#1DB954" />
+                    <Ionicons name={isPlaying && previewingTrackId === track.id ? 'stop-circle' : 'play-circle'} size={28} color={theme.colors.primary} />
                   )}
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -361,7 +442,7 @@ const PlaylistScreen = () => {
                   }}
                   disabled={actionLoading === track.uri}
                 >
-                  <Ionicons name="remove-circle" size={28} color="red" />
+                  <Ionicons name="remove-circle" size={28} color={theme.colors.error} />
                 </TouchableOpacity>
               </View>
             );
@@ -378,7 +459,7 @@ const PlaylistScreen = () => {
                 <View key={track.id} style={styles.trackItem}>
                   <Image
                     source={track.album?.images && track.album.images[0]?.url ? { uri: track.album.images[0].url } : require('../../assets/images/profile_picture.png')}
-                    style={{ width: 48, height: 48, borderRadius: 8, marginRight: 12, backgroundColor: '#222' }}
+                    style={{ width: 48, height: 48, borderRadius: 8, marginRight: 12, backgroundColor: theme.colors.card }}
                   />
                   <View style={styles.trackInfo}>
                     <Text style={[styles.trackTitle, { color: theme.colors.text }]} numberOfLines={1}>{track.name}</Text>
@@ -389,7 +470,7 @@ const PlaylistScreen = () => {
                     onPress={() => handleAddTrack(track.uri)}
                     disabled={actionLoading === track.uri}
                   >
-                    <Ionicons name="add-circle" size={28} color="#1DB954" />
+                    <Ionicons name="add-circle" size={28} color={theme.colors.primary} />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -410,7 +491,7 @@ const PlaylistScreen = () => {
         <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20, marginLeft: 16, marginBottom: 8 }}>
           <Text style={[styles.title, { color: theme.colors.text }]}>Your Playlists</Text>
           <TouchableOpacity style={{ marginLeft: 12, backgroundColor: theme.colors.primary, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 6 }} onPress={() => setShowCreateModal(true)}>
-            <Text style={{ color: '#fff', fontWeight: 'bold' }}>+ New</Text>
+            <Text style={{ color: theme.colors.buttonText, fontWeight: 'bold' }}>+ New</Text>
           </TouchableOpacity>
         </View>
         {playlists.length === 0 && (
@@ -435,7 +516,7 @@ const PlaylistScreen = () => {
       </ScrollView>
       {/* Create Playlist Modal */}
       <Modal visible={showCreateModal} animationType="slide" transparent>
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ flex: 1, backgroundColor: theme.colors.overlay, justifyContent: 'center', alignItems: 'center' }}>
           <View style={{ backgroundColor: theme.colors.background, padding: 24, borderRadius: 12, width: '85%' }}>
             <Text style={{ color: theme.colors.text, fontSize: 20, fontWeight: 'bold', marginBottom: 16 }}>Create Playlist</Text>
             <TextInput
@@ -457,7 +538,7 @@ const PlaylistScreen = () => {
                 <Text style={{ color: theme.colors.textSecondary, fontSize: 16 }}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={handleCreatePlaylist} disabled={creating || !newPlaylistName.trim()} style={{ backgroundColor: theme.colors.primary, borderRadius: 20, paddingHorizontal: 20, paddingVertical: 8 }}>
-                <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>{creating ? 'Creating...' : 'Create'}</Text>
+                <Text style={{ color: theme.colors.buttonText, fontWeight: 'bold', fontSize: 16 }}>{creating ? 'Creating...' : 'Create'}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -467,8 +548,9 @@ const PlaylistScreen = () => {
   );
 };
 
-// AddTrackInput: simple input for demo
+// AddTrackInput: simple input for demo - Updated with theme colors
 const AddTrackInput = ({ onAdd, loading }: { onAdd: (uri: string) => void; loading: boolean }) => {
+  const theme = useTheme();
   const [uri, setUri] = useState('');
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -476,97 +558,16 @@ const AddTrackInput = ({ onAdd, loading }: { onAdd: (uri: string) => void; loadi
         placeholder="spotify:track:..."
         value={uri}
         onChangeText={setUri}
-        style={{ flex: 1, color: '#fff', borderBottomWidth: 1, borderBottomColor: '#555', marginRight: 8, fontSize: 15 }}
-        placeholderTextColor="#888"
+        style={{ flex: 1, color: theme.colors.text, borderBottomWidth: 1, borderBottomColor: theme.colors.border, marginRight: 8, fontSize: 15 }}
+        placeholderTextColor={theme.colors.textSecondary}
         autoCapitalize="none"
         autoCorrect={false}
       />
-      <TouchableOpacity onPress={() => { if (uri.trim()) { onAdd(uri.trim()); setUri(''); } }} disabled={loading || !uri.trim()} style={{ backgroundColor: '#1DB954', borderRadius: 16, paddingHorizontal: 16, paddingVertical: 8 }}>
-        <Text style={{ color: '#fff', fontWeight: 'bold' }}>{loading ? '...' : 'Add'}</Text>
+      <TouchableOpacity onPress={() => { if (uri.trim()) { onAdd(uri.trim()); setUri(''); } }} disabled={loading || !uri.trim()} style={{ backgroundColor: theme.colors.primary, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 8 }}>
+        <Text style={{ color: theme.colors.buttonText, fontWeight: 'bold' }}>{loading ? '...' : 'Add'}</Text>
       </TouchableOpacity>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 8,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginTop: 24,
-    marginBottom: 8,
-  },
-  header: {
-    alignItems: 'center',
-    padding: 20,
-    marginTop: 20,
-  },
-  playlistImageLargeContainer: {
-    width: 200,
-    height: 200,
-    borderRadius: 8,
-    marginBottom: 20,
-    backgroundColor: '#282828',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  playlistImageLarge: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 8,
-  },
-  playlistItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  playlistImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    marginRight: 16,
-    backgroundColor: '#222',
-  },
-  playlistInfo: {
-    flex: 1,
-  },
-  playlistName: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  playlistDesc: {
-    fontSize: 14,
-    opacity: 0.7,
-  },
-  trackItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
-    paddingHorizontal: 16,
-  },
-  trackInfo: {
-    flex: 1,
-  },
-  trackTitle: {
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  trackArtist: {
-    fontSize: 14,
-    opacity: 0.7,
-  },
-});
 
 export default PlaylistScreen;

@@ -88,10 +88,10 @@ export const NowPlayingBar: React.FC = () => {
       <View style={styles.container}>
         {/* Artwork or music icon */}
         {displayArtwork ? (
-          <Image
+        <Image
             source={{ uri: displayArtwork }}
-            style={styles.image}
-          />
+          style={styles.image}
+        />
         ) : (
           <View style={[styles.image, { justifyContent: 'center', alignItems: 'center', backgroundColor: '#282828' }]}> 
             <Ionicons name="musical-notes" size={28} color="#b3b3b3" />
@@ -109,12 +109,12 @@ export const NowPlayingBar: React.FC = () => {
           <ConnectToTvIcon />
         </View>
         <TouchableOpacity onPress={handlePlayPause} style={{ marginLeft: 20 }}>
-          <Ionicons
+        <Ionicons
             name={showPause ? 'pause' : 'play'}
-            size={25}
-            color="white"
+          size={25}
+          color="white"
             style={styles.icon}
-          />
+        />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>

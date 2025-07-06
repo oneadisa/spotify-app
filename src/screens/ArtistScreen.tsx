@@ -10,6 +10,7 @@ import More from '../components/icons/more.tsx';
 import Shuffle from '../components/icons/shuffle.tsx';
 import { useSpotifyApi } from '../hooks/useSpotifyApi';
 import { RootStackParamList } from '../navigation/types';
+import { useTheme } from '../theme/ThemeProvider';
 
 // Import local images for fallback
 const defaultArtistImage = require('../../assets/images/profile_picture.png');
@@ -42,6 +43,7 @@ interface Track {
 }
 
 const ArtistScreen = () => {
+  const theme = useTheme();
   const navigation = useNavigation();
   const route = useRoute<ArtistScreenRouteProp>();
   const { id, name } = route.params;
@@ -96,7 +98,7 @@ const ArtistScreen = () => {
       fetchArtistData();
     }
   }, [id, getArtist, getArtistTopTracks]);
-
+  
   const handleBackPress = () => {
     navigation.goBack();
   };
@@ -246,141 +248,6 @@ const ArtistScreen = () => {
     };
   }, []);
 
-  // Move all header content (cover image, artist info, etc.) into a header component
-  const renderHeader = () => (
-    <>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
-          <BackButton />
-        </TouchableOpacity>
-      </View>
-      <View style={styles.coverImageContainer}>
-        <Image 
-          source={getArtistImage()} 
-          style={[
-            styles.coverImage, 
-            { height: COVER_IMAGE_HEIGHT, resizeMode: 'cover' }
-          ]} 
-        />
-        <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.25)']}
-          style={styles.imageOverlay}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 0, y: 1 }}
-        />
-        <View style={styles.artistNameContainer}>
-          <Text style={styles.artistName}>{artist?.name}</Text>
-        </View>
-      </View>
-      <LinearGradient
-        colors={['#371A1A', '#111111']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={styles.gradientBelowImage}
-      />
-      <View style={{paddingHorizontal: 16}}>
-        <Text style={styles.listeners}>
-          {artist?.followers ? formatFollowers(artist.followers.total) : 'Monthly listeners unavailable'}
-        </Text>
-        <View style={styles.topRowContainer}>
-          <View style={styles.leftActions}>
-            <TouchableOpacity style={styles.followBtn}>
-              <Text style={styles.followText}>Follow</Text>
-            </TouchableOpacity>
-            <View style={styles.moreButton}>
-              <More/>
-            </View>
-          </View>
-          <View style={styles.rightActions}>
-            <TouchableOpacity style={styles.shuffleButton}>
-              <Shuffle/>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.playBtn} onPress={playAllPreviewsSequentially} disabled={isSequentialPlaying}>
-              <Ionicons name="play" size={24} color="black" />
-            </TouchableOpacity>
-          </View>
-        </View>
-        {topTracks.length > 0 && (
-          <Text style={styles.sectionTitle}>Popular</Text>
-        )}
-      </View>
-    </>
-  );
-
-  // Move NowPlayingBar and Modal to footer
-  const renderFooter = () => (
-    <>
-      {/* <NowPlayingBar /> */}
-      {/* Playlist Selection Modal */}
-      <Modal
-        visible={isPlaylistModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setIsPlaylistModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add to Playlist</Text>
-              <TouchableOpacity onPress={() => setIsPlaylistModalVisible(false)}>
-                <Ionicons name="close" size={24} color="white" />
-              </TouchableOpacity>
-            </View>
-            {isLoadingPlaylists ? (
-              <ActivityIndicator size="large" color="#1DB954" style={styles.loadingIndicator} />
-            ) : userPlaylists.length === 0 ? (
-              <Text style={styles.noPlaylistsText}>You don't have any playlists yet.</Text>
-            ) : (
-              <FlatList
-                data={userPlaylists}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <TouchableOpacity 
-                    style={styles.playlistItem}
-                    onPress={() => handleAddToPlaylist(item.id)}
-                  >
-                    <Image 
-                      source={item.images?.[0]?.url ? { uri: item.images[0].url } : defaultArtistImage}
-                      style={styles.playlistImage}
-                    />
-                    <View style={styles.playlistInfo}>
-                      <Text style={styles.playlistName} numberOfLines={1}>
-                        {item.name}
-                      </Text>
-                      <Text style={styles.playlistTracks}>
-                        {item.tracks?.total || 0} tracks
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                )}
-              />
-            )}
-          </View>
-        </View>
-      </Modal>
-    </>
-  );
-
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1DB954" />
-        <Text style={styles.loadingText}>Loading artist...</Text>
-      </View>
-    );
-  }
-
-  if (error || !artist) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>{error || 'Artist not found'}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.retryButtonText}>Go Back</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
   // Add preview playback for artist tracks (like SearchScreen)
   const handlePreview = async (track: Track) => {
     if (!track || !track.id) return;
@@ -417,7 +284,425 @@ const ArtistScreen = () => {
       Alert.alert('Failed to play preview', e?.message || 'Failed to play preview');
       console.error('Preview error:', e);
     }
-  };
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+      backgroundColor: theme.colors.background,
+    paddingTop: 0,
+  },
+  header: {
+    position: 'absolute',
+    top: 50,
+    left: 16,
+    zIndex: 10,
+  },
+  backButton: {
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scrollContainer: {
+    // paddingHorizontal: 16,
+  },
+  coverImageContainer: {
+    position: 'relative',
+    width: '100%',
+    // marginBottom: 16,
+  },
+  coverImage: {
+    width: '100%',
+  },
+  gradientBelowImage: {
+    width: '100%',
+    height: 80, // Adjust this value to control the height of the gradient
+    position: 'absolute',
+    top: 322, // Match this with COVER_IMAGE_HEIGHT
+    left: 0,
+    right: 0,
+    zIndex: -1,
+    opacity: 0.6,
+  },
+  artistName: {
+    fontSize: 48,
+    fontWeight: 'bold',
+      color: theme.colors.text,
+    zIndex: 2,
+  },
+  imageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1,
+  },
+  artistNameContainer: {
+    position: 'absolute',
+    bottom: 16,
+    left: 16,
+    right: 16,
+    zIndex: 2,
+  },
+  listeners: {
+    fontSize: 14,
+      color: theme.colors.textSecondary,
+    marginTop: 10,
+  },
+  followBtn: {
+      borderColor: theme.colors.border,
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    alignSelf: 'flex-start',
+    marginTop: 12,
+  },
+  followText: {
+      color: theme.colors.text,
+    fontSize: 14,
+  },
+  topRowContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 10,
+    width: '100%',
+  },
+  leftActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  moreButton: {
+    marginLeft: 16,
+  },
+  shuffleButton: {
+    marginRight: 16,
+  },
+  youLikedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 10,
+    marginRight: 10,
+  },
+  likedContainer: {
+    position: 'relative',
+    marginRight: 10,
+  },
+  youLikedTextContainer: {
+    marginLeft: 10,
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+  },
+  artistImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 4,
+  },
+  likedIcon: {
+    position: 'absolute',
+    bottom: -5,
+    right: -4,
+      backgroundColor: theme.colors.background,
+    borderRadius: 13,
+    padding: 1,
+  },
+  youLikedText: {
+      color: theme.colors.text,
+    fontSize: 15,
+    marginTop: 4,
+    fontWeight: '500',
+  },
+  songCount: {
+      color: theme.colors.text,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  playBtn: {
+      backgroundColor: theme.colors.primary,
+    padding: 12,
+    borderRadius: 30,
+    marginLeft: 10,
+  },
+  sectionTitle: {
+    fontSize: 18,
+      color: theme.colors.text,
+    fontWeight: 'bold',
+    marginTop: 24,
+  },
+  songRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  songIndex: {
+      color: theme.colors.text,
+    width: 20,
+  },
+  songCover: {
+    marginHorizontal: 12,
+  },
+  songTitle: {
+      color: theme.colors.text,
+    fontSize: 14,
+  },
+  songPlays: {
+      color: theme.colors.textSecondary,
+    fontSize: 12,
+  },
+  bottomNowPlaying: {
+      backgroundColor: theme.colors.card,
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderTopWidth: 0.2,
+      borderColor: theme.colors.border,
+  },
+  nowPlayingImage: {
+    width: NOW_PLAYING_IMAGE_SIZE,
+    height: NOW_PLAYING_IMAGE_SIZE,
+    borderRadius: 4,
+    marginRight: 12,
+  },
+  nowPlayingTitle: {
+      color: theme.colors.text,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  nowPlayingArtist: {
+      color: theme.colors.textSecondary,
+      fontSize: 12,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    loadingText: {
+      color: theme.colors.text,
+      fontSize: 16,
+      marginTop: 10,
+    },
+    errorContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    errorText: {
+      color: theme.colors.text,
+      fontSize: 16,
+      marginBottom: 10,
+    },
+    retryButton: {
+      backgroundColor: theme.colors.primary,
+      padding: 12,
+      borderRadius: 20,
+    },
+    retryButtonText: {
+      color: theme.colors.buttonText,
+      fontSize: 16,
+      fontWeight: 'bold',
+    },
+    songInfo: {
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'flex-start',
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: theme.colors.overlay,
+      justifyContent: 'flex-end',
+    },
+    modalContent: {
+      backgroundColor: theme.colors.card,
+      borderTopLeftRadius: 12,
+      borderTopRightRadius: 12,
+      padding: 20,
+      maxHeight: '80%',
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 20,
+    },
+    modalTitle: {
+      color: theme.colors.text,
+      fontSize: 18,
+      fontWeight: 'bold',
+    },
+    loadingIndicator: {
+      marginVertical: 40,
+    },
+    noPlaylistsText: {
+      color: theme.colors.text,
+      textAlign: 'center',
+      marginVertical: 20,
+    },
+    playlistItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+    },
+    playlistImage: {
+      width: 50,
+      height: 50,
+      borderRadius: 4,
+      marginRight: 12,
+    },
+    playlistInfo: {
+      flex: 1,
+    },
+    playlistName: {
+      color: theme.colors.text,
+      fontSize: 16,
+      marginBottom: 4,
+    },
+    playlistTracks: {
+      color: theme.colors.textSecondary,
+    fontSize: 12,
+  },
+});
+
+  // Move all header content (cover image, artist info, etc.) into a header component
+  const renderHeader = () => (
+    <>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleBackPress} style={styles.backButton}>
+          <BackButton />
+        </TouchableOpacity>
+      </View>
+      <View style={styles.coverImageContainer}>
+        <Image 
+          source={getArtistImage()} 
+          style={[
+            styles.coverImage, 
+            { height: COVER_IMAGE_HEIGHT, resizeMode: 'cover' }
+          ]} 
+        />
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.25)']}
+          style={styles.imageOverlay}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 0, y: 1 }}
+        />
+        <View style={styles.artistNameContainer}>
+          <Text style={styles.artistName}>{artist?.name}</Text>
+        </View>
+      </View>
+      <LinearGradient
+        colors={[theme.colors.card, theme.colors.background]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+        style={styles.gradientBelowImage}
+      />
+      <View style={{paddingHorizontal: 16}}>
+        <Text style={styles.listeners}>
+          {artist?.followers ? formatFollowers(artist.followers.total) : 'Monthly listeners unavailable'}
+        </Text>
+        <View style={styles.topRowContainer}>
+          <View style={styles.leftActions}>
+            <TouchableOpacity style={styles.followBtn}>
+              <Text style={styles.followText}>Follow</Text>
+            </TouchableOpacity>
+            <View style={styles.moreButton}>
+              <More/>
+            </View>
+          </View>
+          <View style={styles.rightActions}>
+            <TouchableOpacity style={styles.shuffleButton}>
+              <Shuffle/>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.playBtn} onPress={playAllPreviewsSequentially} disabled={isSequentialPlaying}>
+              <Ionicons name="play" size={24} color={theme.colors.buttonText} />
+            </TouchableOpacity>
+          </View>
+        </View>
+        {topTracks.length > 0 && (
+          <Text style={styles.sectionTitle}>Popular</Text>
+        )}
+      </View>
+    </>
+  );
+
+  // Move NowPlayingBar and Modal to footer
+  const renderFooter = () => (
+    <>
+      {/* <NowPlayingBar /> */}
+      {/* Playlist Selection Modal */}
+      <Modal
+        visible={isPlaylistModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsPlaylistModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add to Playlist</Text>
+              <TouchableOpacity onPress={() => setIsPlaylistModalVisible(false)}>
+                <Ionicons name="close" size={24} color={theme.colors.text} />
+              </TouchableOpacity>
+            </View>
+            {isLoadingPlaylists ? (
+              <ActivityIndicator size="large" color={theme.colors.primary} style={styles.loadingIndicator} />
+            ) : userPlaylists.length === 0 ? (
+              <Text style={styles.noPlaylistsText}>You don't have any playlists yet.</Text>
+            ) : (
+              <FlatList
+                data={userPlaylists}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <TouchableOpacity 
+                    style={styles.playlistItem}
+                    onPress={() => handleAddToPlaylist(item.id)}
+                  >
+                    <Image 
+                      source={item.images?.[0]?.url ? { uri: item.images[0].url } : defaultArtistImage}
+                      style={styles.playlistImage}
+                    />
+                    <View style={styles.playlistInfo}>
+                      <Text style={styles.playlistName} numberOfLines={1}>
+                        {item.name}
+                      </Text>
+                      <Text style={styles.playlistTracks}>
+                        {item.tracks?.total || 0} tracks
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
+    </>
+  );
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <Text style={styles.loadingText}>Loading artist...</Text>
+      </View>
+    );
+  }
+
+  if (error || !artist) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>{error || 'Artist not found'}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.retryButtonText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   const renderTrackItem = ({ item: track }: { item: Track }) => (
     <TouchableOpacity 
@@ -469,288 +754,5 @@ const ArtistScreen = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'black',
-    paddingTop: 0,
-  },
-  header: {
-    position: 'absolute',
-    top: 50,
-    left: 16,
-    zIndex: 10,
-  },
-  backButton: {
-    width: 32,
-    height: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  scrollContainer: {
-    // paddingHorizontal: 16,
-  },
-  coverImageContainer: {
-    position: 'relative',
-    width: '100%',
-    // marginBottom: 16,
-  },
-  coverImage: {
-    width: '100%',
-  },
-  gradientBelowImage: {
-    width: '100%',
-    height: 80, // Adjust this value to control the height of the gradient
-    position: 'absolute',
-    top: 322, // Match this with COVER_IMAGE_HEIGHT
-    left: 0,
-    right: 0,
-    zIndex: -1,
-    opacity: 0.6,
-  },
-  artistName: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    color: 'white',
-    zIndex: 2,
-  },
-  imageOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 1,
-  },
-  artistNameContainer: {
-    position: 'absolute',
-    bottom: 16,
-    left: 16,
-    right: 16,
-    zIndex: 2,
-  },
-  listeners: {
-    fontSize: 14,
-    color: 'lightgray',
-    marginTop: 10,
-  },
-  followBtn: {
-    borderColor: 'gray',
-    borderWidth: 1,
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    alignSelf: 'flex-start',
-    marginTop: 12,
-  },
-  followText: {
-    color: 'white',
-    fontSize: 14,
-  },
-  topRowContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 10,
-    width: '100%',
-  },
-  leftActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rightActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  moreButton: {
-    marginLeft: 16,
-  },
-  shuffleButton: {
-    marginRight: 16,
-  },
-  youLikedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-    marginRight: 10,
-  },
-  likedContainer: {
-    position: 'relative',
-    marginRight: 10,
-  },
-  youLikedTextContainer: {
-    marginLeft: 10,
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-  },
-  artistImage: {
-    width: 32,
-    height: 32,
-    borderRadius: 4,
-  },
-  likedIcon: {
-    position: 'absolute',
-    bottom: -5,
-    right: -4,
-    backgroundColor: 'black',
-    borderRadius: 13,
-    padding: 1,
-  },
-  youLikedText: {
-    color: 'white',
-    fontSize: 15,
-    marginTop: 4,
-    fontWeight: '500',
-  },
-  songCount: {
-    color: 'white',
-    fontSize: 12,
-    marginTop: 2,
-  },
-  playBtn: {
-    backgroundColor: '#1DB954',
-    padding: 12,
-    borderRadius: 30,
-    marginLeft: 10,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    color: 'white',
-    fontWeight: 'bold',
-    marginTop: 24,
-  },
-  songRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-  },
-  songIndex: {
-    color: 'white',
-    width: 20,
-  },
-  songCover: {
-    marginHorizontal: 12,
-  },
-  songTitle: {
-    color: 'white',
-    fontSize: 14,
-  },
-  songPlays: {
-    color: 'gray',
-    fontSize: 12,
-  },
-  bottomNowPlaying: {
-    backgroundColor: '#3b2e2e',
-    padding: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderTopWidth: 0.2,
-    borderColor: '#555',
-  },
-  nowPlayingImage: {
-    width: NOW_PLAYING_IMAGE_SIZE,
-    height: NOW_PLAYING_IMAGE_SIZE,
-    borderRadius: 4,
-    marginRight: 12,
-  },
-  nowPlayingTitle: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  nowPlayingArtist: {
-    color: 'gray',
-    fontSize: 12,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    color: 'white',
-    fontSize: 16,
-    marginTop: 10,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  errorText: {
-    color: 'white',
-    fontSize: 16,
-    marginBottom: 10,
-  },
-  retryButton: {
-    backgroundColor: '#1DB954',
-    padding: 12,
-    borderRadius: 20,
-  },
-  retryButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  songInfo: {
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#282828',
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    padding: 20,
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  modalTitle: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  loadingIndicator: {
-    marginVertical: 40,
-  },
-  noPlaylistsText: {
-    color: 'white',
-    textAlign: 'center',
-    marginVertical: 20,
-  },
-  playlistItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#404040',
-  },
-  playlistImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 4,
-    marginRight: 12,
-  },
-  playlistInfo: {
-    flex: 1,
-  },
-  playlistName: {
-    color: 'white',
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  playlistTracks: {
-    color: '#b3b3b3',
-    fontSize: 12,
-  },
-});
 
 export default ArtistScreen;

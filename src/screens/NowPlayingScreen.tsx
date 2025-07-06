@@ -74,6 +74,42 @@ const NowPlayingScreen = () => {
     ? Math.min(100, Math.max(0, (displayProgress / displayDuration) * 100))
     : 0;
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      paddingTop: 16,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+    },
+    artworkContainer: {
+      alignItems: 'center',
+      marginTop: 20,
+      marginBottom: 40,
+    },
+    artwork: {
+      width: height * 0.4,
+      height: height * 0.4,
+      borderRadius: 10,
+      shadowColor: theme.isDarkMode ? '#000' : '#666',
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.3,
+      shadowRadius: 20,
+      elevation: 5,
+    },
+    songInfo: {
+      alignItems: 'center',
+      marginBottom: 30,
+    },
+    songTitle: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      marginBottom: 8,
+    },
+    artistName: {
+      fontSize: 16,
+    },
+  });
+
   const handlePlayPause = async () => {
     if (isPreviewPlaying) {
       // Handle preview playback
@@ -143,7 +179,7 @@ const NowPlayingScreen = () => {
           <Text style={{ color: theme.colors.textSecondary, fontSize: 12, width: 40 }}>
             {formatTime(displayProgress)}
           </Text>
-          <View style={{ flex: 1, height: 4, backgroundColor: '#333', borderRadius: 2, marginHorizontal: 8 }}>
+          <View style={{ flex: 1, height: 4, backgroundColor: theme.colors.border, borderRadius: 2, marginHorizontal: 8 }}>
             <View
               style={{
                 width: `${progressPercentage}%`,
@@ -182,40 +218,6 @@ const NowPlayingScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 16,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  artworkContainer: {
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 40,
-  },
-  artwork: {
-    width: height * 0.4,
-    height: height * 0.4,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 5,
-  },
-  songInfo: {
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  songTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  artistName: {
-    fontSize: 16,
-  },
-});
+
 
 export default NowPlayingScreen; 

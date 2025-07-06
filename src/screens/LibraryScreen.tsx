@@ -139,8 +139,133 @@ const LibraryScreen = () => {
         },
       ],
       { cancelable: true }
-    );
-  };
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+      backgroundColor: theme.colors.background,
+  },
+  header: {
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+      color: theme.colors.text,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: -50, // Adjust this value to center the text vertically
+  },
+  emptyText: {
+      color: theme.colors.textSecondary,
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  logoutButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+      backgroundColor: theme.colors.primary,
+    borderRadius: 20,
+  },
+  themeButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+      backgroundColor: theme.colors.card,
+    borderRadius: 20,
+    marginRight: 8,
+  },
+  themeButtonText: {
+      color: theme.colors.text,
+    fontSize: 18,
+  },
+  logoutText: {
+      color: theme.colors.buttonText,
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+    playlistItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 12,
+      flex: 1,
+      marginRight: 10,
+    },
+    playlistImageContainer: {
+      width: 60,
+      height: 60,
+      borderRadius: 8,
+      marginRight: 16,
+      backgroundColor: theme.colors.card,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    playlistImage: {
+      width: 60,
+      height: 60,
+      borderRadius: 8,
+    },
+    playlistInfo: {
+      flex: 1,
+    },
+    playlistName: {
+      fontSize: 16,
+      fontWeight: '600',
+      marginBottom: 4,
+    },
+    playlistDesc: {
+      fontSize: 14,
+    },
+    playlistItemRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+    },
+    deleteButton: {
+      padding: 8,
+    },
+    modalOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: theme.colors.overlay,
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 1000,
+    },
+    modalContent: {
+      backgroundColor: theme.colors.card,
+      borderRadius: 12,
+      padding: 24,
+      width: '80%',
+      maxWidth: 400,
+    },
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: 'bold',
+      color: theme.colors.text,
+      marginBottom: 16,
+    },
+    modalInput: {
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      borderRadius: 8,
+      padding: 12,
+      marginBottom: 12,
+      color: theme.colors.text,
+      backgroundColor: theme.colors.background,
+    },
+  });
 
   return (
     <>
@@ -151,11 +276,11 @@ const LibraryScreen = () => {
             <TouchableOpacity 
               style={[styles.themeButton, { 
                 marginLeft: 0,
-                backgroundColor: '#1DB954', // Spotify green
+                backgroundColor: theme.colors.primary,
               }]} 
               onPress={() => setShowCreateModal(true)}
             >
-              <Text style={[styles.themeButtonText, { color: '#000000' }]}>+</Text>
+              <Text style={[styles.themeButtonText, { color: theme.colors.buttonText }]}>+</Text>
             </TouchableOpacity>
           </View>
           {loading ? (
@@ -164,7 +289,7 @@ const LibraryScreen = () => {
             </View>
           ) : error ? (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-              <Text style={{ color: 'red', textAlign: 'center' }}>{error}</Text>
+              <Text style={{ color: theme.colors.error, textAlign: 'center' }}>{error}</Text>
             </View>
           ) : playlists.length === 0 ? (
             <View style={styles.emptyContainer}>
@@ -191,7 +316,7 @@ const LibraryScreen = () => {
                           style={styles.playlistImage}
                         />
                       ) : (
-                        <Ionicons name="musical-notes" size={30} color="#b3b3b3" />
+                        <Ionicons name="musical-notes" size={30} color={theme.colors.textSecondary} />
                       )}
                     </View>
                     <View style={styles.playlistInfo}>
@@ -201,7 +326,7 @@ const LibraryScreen = () => {
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.deleteButton, { position: 'absolute', right: 10, padding: 8, zIndex: 2 }]} onPress={() => handleDeletePlaylist(playlist.id)} accessibilityLabel="Delete playlist" testID={`delete-playlist-${playlist.id}`}>
-                    <Ionicons name="trash" size={24} color="red" />
+                    <Ionicons name="trash" size={24} color={theme.colors.error} />
                   </TouchableOpacity>
                 </View>
               ))}
@@ -232,7 +357,7 @@ const LibraryScreen = () => {
                   <Text style={{ color: theme.colors.textSecondary, fontSize: 16 }}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleCreatePlaylist} disabled={creating || !newPlaylistName.trim()} style={{ backgroundColor: theme.colors.primary, borderRadius: 20, paddingHorizontal: 20, paddingVertical: 8 }}>
-                  <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>{creating ? 'Creating...' : 'Create'}</Text>
+                  <Text style={{ color: theme.colors.buttonText, fontWeight: 'bold', fontSize: 16 }}>{creating ? 'Creating...' : 'Create'}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -262,7 +387,7 @@ const LibraryScreen = () => {
                   <Text style={{ color: theme.colors.textSecondary, fontSize: 16 }}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleUpdatePlaylist} disabled={editing || !editPlaylistName.trim()} style={{ backgroundColor: theme.colors.primary, borderRadius: 20, paddingHorizontal: 20, paddingVertical: 8 }}>
-                  <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>{editing ? 'Saving...' : 'Save'}</Text>
+                  <Text style={{ color: theme.colors.buttonText, fontWeight: 'bold', fontSize: 16 }}>{editing ? 'Saving...' : 'Save'}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -273,151 +398,5 @@ const LibraryScreen = () => {
     </>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000000',
-  },
-  header: {
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: -50, // Adjust this value to center the text vertically
-  },
-  emptyText: {
-    color: '#b3b3b3',
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  logoutButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-    backgroundColor: '#1DB954',
-    borderRadius: 20,
-  },
-  themeButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    backgroundColor: '#222',
-    borderRadius: 20,
-    marginRight: 8,
-  },
-  themeButtonText: {
-    color: '#fff',
-    fontSize: 18,
-  },
-  logoutText: {
-    color: '#000',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  playlistItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    flex: 1,
-    marginRight: 10,
-  },
-  playlistImageContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    marginRight: 16,
-    backgroundColor: '#282828',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  playlistImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 8,
-  },
-  playlistInfo: {
-    flex: 1,
-    marginRight: 10, 
-  },
-  playlistName: {
-    fontSize: 16,
-    fontWeight: '600',
-    maxWidth: '90%', 
-  },
-  playlistDesc: {
-    fontSize: 14,
-    opacity: 0.7,
-  },
-  createButton: {
-    backgroundColor: '#1DB954',
-    borderRadius: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    alignSelf: 'center',
-    marginBottom: 12,
-    marginTop: 4,
-  },
-  createButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  modalOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 100,
-  },
-  modalContent: {
-    backgroundColor: '#181818',
-    padding: 24,
-    borderRadius: 12,
-    width: '85%',
-  },
-  modalTitle: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  modalInput: {
-    color: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#555',
-    marginBottom: 16,
-    fontSize: 16,
-    paddingVertical: 6,
-  },
-  playlistItemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    position: 'relative',
-    width: '100%',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  deleteButton: {
-    position: 'absolute',
-    right: 10,
-    padding: 8,
-    zIndex: 2,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    borderRadius: 20,
-  },
-});
 
 export default LibraryScreen;

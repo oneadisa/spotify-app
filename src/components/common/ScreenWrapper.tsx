@@ -18,25 +18,25 @@ export const ScreenWrapper: React.FC<ScreenWrapperProps> = ({
 }) => {
   const theme = useTheme();
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    content: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    padding: {
+      // paddingHorizontal: 16,
+    },
+  });
+
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: '#000000' }, style]} edges={edges}>
+    <SafeAreaView style={[styles.container, style]} edges={edges}>
       <View style={[styles.content, noPadding ? null : styles.padding]}>{children}</View>
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000000',
-  },
-  content: {
-    flex: 1,
-    backgroundColor: '#000000',
-  },
-  padding: {
-    // paddingHorizontal: 16,
-  },
-});
 
 export default ScreenWrapper;

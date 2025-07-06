@@ -11,7 +11,8 @@ export const LibraryFilledIcon: React.FC<LibraryFilledIconProps> = ({
   size = 22,
   color,
 }) => {
-  const iconColor = color || '#fff';
+  const theme = useTheme();
+  const iconColor = color || theme.colors.primary;
 
   return (
     <Svg

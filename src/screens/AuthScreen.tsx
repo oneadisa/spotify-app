@@ -20,6 +20,7 @@ import PhoneIcon from "../components/icons/PhoneIcon";
 import GoogleIcon from "../components/icons/GoogleIcon";
 import FacebookIcon from "../components/icons/FacebookIcon";
 import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "../theme/ThemeProvider";
 
 type AuthScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -27,6 +28,7 @@ type AuthScreenNavigationProp = StackNavigationProp<
 >;
 
 const AuthScreen: React.FC = () => {
+  const theme = useTheme();
   const navigation = useNavigation<AuthScreenNavigationProp>();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
@@ -125,10 +127,102 @@ const AuthScreen: React.FC = () => {
     transform: [{ scale: buttonScale }],
   };
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    logoContainer: {
+      marginTop: 60,
+      marginBottom: 40,
+    },
+    logo: {
+      width: 200,
+      height: 100,
+    },
+    textContainer: {
+      marginBottom: 40,
+      paddingHorizontal: 20,
+    },
+    headline: {
+      color: theme.colors.text,
+      fontSize: 28,
+      fontWeight: "bold",
+      textAlign: "center",
+      lineHeight: 34,
+    },
+    buttonsContainer: {
+      width: "100%",
+      paddingHorizontal: 20,
+    },
+    signupButton: {
+      backgroundColor: theme.colors.primary,
+      borderRadius: 25,
+      paddingVertical: 12,
+      marginBottom: 14,
+      flexDirection: "row",
+      alignItems: "center",
+      height: 50,
+      justifyContent: "center",
+    },
+    signupText: {
+      color: theme.colors.buttonText,
+      fontSize: 20,
+      fontWeight: "bold",
+      textAlign: "center",
+    },
+    outlineButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      borderColor: theme.colors.text,
+      borderWidth: 1,
+      borderRadius: 24,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      marginBottom: 12,
+      height: 50,
+    },
+    iconLeft: {
+      position: "absolute",
+      left: 16,
+    },
+    outlineText: {
+      color: theme.colors.text,
+      fontSize: 18,
+      fontWeight: "bold",
+      textAlign: "center",
+      flex: 1,
+    },
+    loginLink: {
+      marginTop: 20,
+    },
+    loginLinkText: {
+      color: theme.colors.text,
+      fontSize: 18,
+      fontWeight: "bold",
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: theme.colors.background,
+    },
+    loadingText: {
+      color: theme.colors.text,
+      marginTop: 10,
+      fontSize: 16,
+    },
+    disabledButton: {
+      opacity: 0.7,
+    },
+  });
+
   if (isLoggingIn) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1DB954" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
         <Text style={styles.loadingText}>Connecting to Spotify...</Text>
       </View>
     );
@@ -136,7 +230,7 @@ const AuthScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#000" />
+      <StatusBar barStyle={theme.isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.colors.background} />
 
       <Animated.View
         style={[
@@ -179,7 +273,7 @@ const AuthScreen: React.FC = () => {
             style={[styles.outlineButton, isLoggingIn && styles.disabledButton]}
             disabled={isLoggingIn}
           >
-            <PhoneIcon size={20} color="#fff" style={styles.iconLeft} />
+            <PhoneIcon size={20} color={theme.colors.text} style={styles.iconLeft} />
             <Text style={styles.outlineText}>Continue with phone number</Text>
           </TouchableOpacity>
 
@@ -212,13 +306,13 @@ const AuthScreen: React.FC = () => {
               accessibilityLabel="Log in with Spotify"
             >
               {isLoggingIn ? (
-                <ActivityIndicator color="#fff" size="small" />
+                <ActivityIndicator color={theme.colors.text} size="small" />
               ) : (
                 <>
                   <Ionicons
                     name="musical-notes"
                     size={20}
-                    color="#fff"
+                    color={theme.colors.text}
                     style={styles.iconLeft}
                   />
                   <Text style={styles.outlineText}>Log in</Text>
@@ -231,97 +325,5 @@ const AuthScreen: React.FC = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  logoContainer: {
-    marginTop: 60,
-    marginBottom: 40,
-  },
-  logo: {
-    width: 200,
-    height: 100,
-  },
-  textContainer: {
-    marginBottom: 40,
-    paddingHorizontal: 20,
-  },
-  headline: {
-    color: "#fff",
-    fontSize: 28,
-    fontWeight: "bold",
-    textAlign: "center",
-    lineHeight: 34,
-  },
-  buttonsContainer: {
-    width: "100%",
-    paddingHorizontal: 20,
-  },
-  signupButton: {
-    backgroundColor: "#1DB954",
-    borderRadius: 25,
-    paddingVertical: 12,
-    marginBottom: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    height: 50,
-    justifyContent: "center",
-  },
-  signupText: {
-    color: "#000",
-    fontSize: 20,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  outlineButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderColor: "#fff",
-    borderWidth: 1,
-    borderRadius: 24,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 12,
-    height: 50,
-  },
-  iconLeft: {
-    position: "absolute",
-    left: 16,
-  },
-  outlineText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-    textAlign: "center",
-    flex: 1,
-  },
-  loginLink: {
-    marginTop: 20,
-  },
-  loginLinkText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#000",
-  },
-  loadingText: {
-    color: "#fff",
-    marginTop: 10,
-    fontSize: 16,
-  },
-  disabledButton: {
-    opacity: 0.7,
-  },
-});
 
 export default AuthScreen;

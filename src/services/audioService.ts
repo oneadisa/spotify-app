@@ -93,6 +93,6 @@ export const getTrackPreview = async (artist: string, title: string) => {
     console.error('Error fetching preview:', error);
     return null;
   }
-};
+}; 
 
 // NOTE: Do NOT call AdvancedAudioService.initialize() anywhere except App.tsx root useEffect! 

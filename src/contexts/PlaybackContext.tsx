@@ -118,8 +118,8 @@ export const PlaybackProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         console.log('Calling startPlayback with no uris (resume)');
         await startPlayback({});
       }
-      setIsPlaying(true);
-      fetchPlayback();
+    setIsPlaying(true);
+    fetchPlayback();
     } catch (e) {
       console.error('Playback error:', e);
     }

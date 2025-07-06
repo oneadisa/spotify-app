@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ThemeProvider } from './src/theme/ThemeProvider';
+import { ThemeProvider, useTheme } from './src/theme/ThemeProvider';
 import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { PlaylistProvider } from './src/contexts/PlaylistContext';
 import AppNavigator from './src/navigation/AppNavigator';
@@ -12,6 +12,7 @@ import Toast from 'react-native-toast-message';
 
 function AppContent() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isDarkMode } = useTheme();
 
   useEffect(() => {
     async function prepare() {
@@ -33,7 +34,7 @@ function AppContent() {
     <PlaylistProvider>
       <AppNavigator isAuthenticated={isAuthenticated} />
       <Toast />
-      <StatusBar style="light" />
+      <StatusBar style={isDarkMode ? "light" : "dark"} />
     </PlaylistProvider>
   );
 }

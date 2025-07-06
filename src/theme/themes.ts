@@ -75,13 +75,20 @@ export const lightTheme: AppTheme = {
 export const darkTheme: AppTheme = {
   ...lightTheme,
   colors: {
-    ...lightTheme.colors,
+    primary: '#1DB954',
     background: '#000000',
     card: '#121212',
-    buttonText: '#FFFFFF',
     text: '#FFFFFF',
     textSecondary: '#A0A0A0',
     border: '#333333',
+    notification: '#1DB954',
+    buttonText: '#FFFFFF',
+    error: '#FF6B6B',
+    success: '#1DB954',
+    warning: '#FFB74D',
+    info: '#64B5F6',
+    divider: 'rgba(255, 255, 255, 0.12)',
+    overlay: 'rgba(0, 0, 0, 0.5)',
   },
   dark: true,
 };

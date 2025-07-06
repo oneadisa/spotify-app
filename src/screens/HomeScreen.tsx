@@ -203,9 +203,248 @@ const HomeScreen = () => {
     navigation.replace('Login');
   };
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 16,
+      paddingTop: 8,
+      backgroundColor: colors.background,
+      justifyContent: 'space-between',
+    },
+    profileImage: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+    },
+    pillsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginLeft: 16,
+    },
+    pill: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      backgroundColor: colors.card,
+      borderRadius: 20,
+      marginRight: 8,
+    },
+    pillActive: {
+      backgroundColor: colors.primary,
+    },
+    pillText: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    pillTextActive: {
+      color: colors.buttonText,
+      fontWeight: 'bold',
+    },
+    pillOutlined: {
+      backgroundColor: colors.card,
+      borderRadius: 20,
+      marginRight: 8,
+    },
+    pillTextOutlined: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    content: {
+      flex: 1,
+      padding: 12,
+    },
+    sectionTitle: {
+      color: colors.text,
+      fontSize: 22,
+      fontWeight: 'bold',
+      marginTop: 24,
+      marginBottom: 16,
+    },
+    errorText: {
+      color: colors.error,
+      marginVertical: 8,
+    },
+    musicTilesGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+      marginBottom: 8,
+    },
+    musicTile: {
+      width: '48%',
+      height: 56,
+      borderRadius: 6,
+      marginBottom: 12,
+      overflow: 'hidden',
+      backgroundColor: colors.card,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    tileContent: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    tileImage: {
+      width: 56,
+      height: '100%',
+      borderRadius: 0,
+      marginRight: 12,
+    },
+    tileTitle: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '600',
+      flex: 1,
+      lineHeight: 18,
+    },
+    albumRow: {
+      flexDirection: 'row',
+      marginBottom: 8,
+    },
+    albumCard: {
+      width: 120,
+      marginRight: 12,
+      alignItems: 'center',
+    },
+    albumImage: {
+      width: 100,
+      height: 100,
+      borderRadius: 8,
+      marginBottom: 8,
+    },
+    albumName: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    albumArtist: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      textAlign: 'center',
+    },
+    mixRow: {
+      flexDirection: 'row',
+      marginBottom: 8,
+    },
+    mixCard: {
+      width: 120,
+      marginRight: 12,
+      alignItems: 'center',
+    },
+    mixImage: {
+      width: 100,
+      height: 100,
+      borderRadius: 8,
+      marginBottom: 8,
+    },
+    mixName: {
+      color: colors.text,
+      fontSize: 14,
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    mixArtist: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      textAlign: 'center',
+    },
+    artistRow: {
+      flexDirection: 'row',
+      marginBottom: 8,
+    },
+    artistCard: {
+      width: 90,
+      marginRight: 12,
+      alignItems: 'center',
+    },
+    artistImage: {
+      width: 70,
+      height: 70,
+      borderRadius: 35,
+      marginBottom: 8,
+    },
+    artistName: {
+      color: colors.text,
+      fontSize: 13,
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    section: {
+      marginTop: 12,
+      marginBottom: 16,
+    },
+    pickedCard: {
+      backgroundColor: colors.card,
+      borderRadius: 8,
+      height: 152,
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    pickedImage: {
+      width: '40%',
+      height: '100%',
+      borderTopLeftRadius: 8,
+      borderBottomLeftRadius: 8,
+      marginRight: 16,
+    },
+    pickedContent: {
+      flex: 1,
+      padding: 16,
+    },
+    pickedTextContainer: {
+      flex: 1,
+    },
+    pickedSubtitle: {
+      color: colors.textSecondary,
+      fontSize: 12,
+      marginBottom: 4,
+    },
+    pickedTitle: {
+      color: colors.text,
+      fontSize: 18,
+      fontWeight: 'bold',
+      marginBottom: 8,
+    },
+    pickedDescription: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+    pickedActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 12,
+    },
+    addButton: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: colors.card,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginRight: 8,
+    },
+    playButton: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: colors.primary,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+  });
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#000" />
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={colors.background} />
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <View style={styles.header}>
@@ -248,7 +487,7 @@ const HomeScreen = () => {
         {/* Music Tiles Grid (Recently Played) */}
         <Text style={styles.sectionTitle}>Recently played</Text>
         {recentlyPlayedLoading ? (
-          <ActivityIndicator color="#1DB954" style={{ marginVertical: 16 }} />
+          <ActivityIndicator color={colors.primary} style={{ marginVertical: 16 }} />
         ) : recentlyPlayedError ? (
           <Text style={styles.errorText}>{recentlyPlayedError}</Text>
         ) : (
@@ -280,7 +519,7 @@ const HomeScreen = () => {
                   <Add/>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.playButton}>
-                  <Ionicons name="play" size={24} color="#000" />
+                  <Ionicons name="play" size={24} color={colors.buttonText} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -290,7 +529,7 @@ const HomeScreen = () => {
         {/* New Releases */}
         <Text style={styles.sectionTitle}>New releases for you</Text>
         {newReleasesLoading ? (
-          <ActivityIndicator color="#1DB954" style={{ marginVertical: 16 }} />
+          <ActivityIndicator color={colors.primary} style={{ marginVertical: 16 }} />
         ) : newReleasesError ? (
           <Text style={styles.errorText}>{newReleasesError}</Text>
         ) : (
@@ -304,7 +543,7 @@ const HomeScreen = () => {
         {/* Your Top Mixes */}
         <Text style={styles.sectionTitle}>Your top mixes</Text>
         {topMixesLoading ? (
-          <ActivityIndicator color="#1DB954" style={{ marginVertical: 16 }} />
+          <ActivityIndicator color={colors.primary} style={{ marginVertical: 16 }} />
         ) : topMixesError ? (
           <Text style={styles.errorText}>{topMixesError}</Text>
         ) : (
@@ -318,7 +557,7 @@ const HomeScreen = () => {
         {/* My Artists */}
         <Text style={styles.sectionTitle}>My artists</Text>
         {topArtistsLoading ? (
-          <ActivityIndicator color="#1DB954" style={{ marginVertical: 16 }} />
+          <ActivityIndicator color={colors.primary} style={{ marginVertical: 16 }} />
         ) : topArtistsError ? (
           <Text style={styles.errorText}>{topArtistsError}</Text>
         ) : (
@@ -338,7 +577,7 @@ const HomeScreen = () => {
         animationType="slide"
       >
         <TouchableOpacity
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' }}
+          style={{ flex: 1, backgroundColor: colors.overlay }}
           activeOpacity={1}
           onPress={() => setIsSettingsVisible(false)}
         />
@@ -347,7 +586,7 @@ const HomeScreen = () => {
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: '#181818',
+          backgroundColor: colors.card,
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
           padding: 24,
@@ -358,28 +597,27 @@ const HomeScreen = () => {
               width: 40,
               height: 5,
               borderRadius: 3,
-              backgroundColor: '#444',
+              backgroundColor: colors.border,
               alignSelf: 'center',
               marginBottom: 8,
             }} />
-          </View>
+            </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
-            {/* Theme toggle button hidden */}
-            {/* <TouchableOpacity style={{
+            <TouchableOpacity style={{
               paddingVertical: 6,
               paddingHorizontal: 12,
-              backgroundColor: '#222',
+              backgroundColor: colors.card,
               borderRadius: 20,
               marginRight: 8,
             }} onPress={handleThemeToggle}>
-              <Text style={{ color: '#fff', fontSize: 18 }}>
+              <Text style={{ color: colors.text, fontSize: 18 }}>
                 {themePreference === 'light' ? '☀️' : themePreference === 'dark' ? '🌙' : '🖥️'}
               </Text>
-            </TouchableOpacity> */}
+            </TouchableOpacity>
             <TouchableOpacity
               style={{
                 padding: 16,
-                backgroundColor: '#1DB954',
+                backgroundColor: colors.primary,
                 borderRadius: 32,
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -387,7 +625,7 @@ const HomeScreen = () => {
               }}
               onPress={handleLogout}
             >
-              <Ionicons name="log-out-outline" size={32} color="#000" />
+              <Ionicons name="log-out-outline" size={32} color={colors.buttonText} />
             </TouchableOpacity>
           </View>
         </View>
@@ -395,242 +633,5 @@ const HomeScreen = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    paddingTop: 8,
-    backgroundColor: '#000',
-    justifyContent: 'space-between',
-  },
-  profileImage: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-  },
-  pillsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 16,
-  },
-  pill: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#292929',
-    borderRadius: 20,
-    marginRight: 8,
-  },
-  pillActive: {
-    backgroundColor: '#1DB954',
-  },
-  pillText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  pillTextActive: {
-    color: '#000',
-    fontWeight: 'bold',
-  },
-  pillOutlined: {
-    backgroundColor: '#292929',
-    borderRadius: 20,
-    marginRight: 8,
-  },
-  pillTextOutlined: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  content: {
-    flex: 1,
-    padding: 12,
-  },
-  sectionTitle: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginTop: 24,
-    marginBottom: 16,
-  },
-  errorText: {
-    color: 'red',
-    marginVertical: 8,
-  },
-  musicTilesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  musicTile: {
-    width: '48%',
-    height: 56,
-    borderRadius: 6,
-    marginBottom: 12,
-    overflow: 'hidden',
-    backgroundColor: '#222',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  tileContent: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  tileImage: {
-    width: 56,
-    height: '100%',
-    borderRadius: 0,
-    marginRight: 12,
-  },
-  tileTitle: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-    flex: 1,
-    lineHeight: 18,
-  },
-  albumRow: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  albumCard: {
-    width: 120,
-    marginRight: 12,
-    alignItems: 'center',
-  },
-  albumImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  albumName: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  albumArtist: {
-    color: '#b3b3b3',
-    fontSize: 12,
-    textAlign: 'center',
-  },
-  mixRow: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  mixCard: {
-    width: 120,
-    marginRight: 12,
-    alignItems: 'center',
-  },
-  mixImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  mixName: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  mixArtist: {
-    color: '#b3b3b3',
-    fontSize: 12,
-    textAlign: 'center',
-  },
-  artistRow: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  artistCard: {
-    width: 90,
-    marginRight: 12,
-    alignItems: 'center',
-  },
-  artistImage: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    marginBottom: 8,
-  },
-  artistName: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  section: {
-    marginTop: 12,
-    marginBottom: 16,
-  },
-  pickedCard: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 8,
-    height: 152,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  pickedImage: {
-    width: '40%',
-    height: '100%',
-    borderTopLeftRadius: 8,
-    borderBottomLeftRadius: 8,
-    marginRight: 16,
-  },
-  pickedContent: {
-    flex: 1,
-    flexDirection: 'column',
-    justifyContent: 'flex-start',
-    alignItems: 'flex-start',
-    padding: 16,
-  },
-  pickedTextContainer: {
-    flex: 1,
-  },
-  pickedSubtitle: {
-    color: '#b3b3b3',
-    fontSize: 13,
-    marginBottom: 4,
-  },
-  pickedTitle: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  pickedDescription: {
-    color: '#b3b3b3',
-    fontSize: 10,
-    lineHeight: 16,
-    marginBottom: 4,
-  },
-  pickedActions: {
-    marginTop: 4,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-  },
-  addButton: {},
-  playButton: {
-    backgroundColor: '#fff',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
 
 export default HomeScreen;

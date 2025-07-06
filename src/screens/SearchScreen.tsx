@@ -30,6 +30,7 @@ import { getTrackPreview, useAudioPlayer } from '../services/audioService';
 import { usePlayback } from '../contexts/PlaybackContext';
 import { showToast } from '../utils/toast';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '../theme/ThemeProvider';
 
 // Import genre images
 const cozyImg = require('../../assets/images/searchscreen/genres/cozy.png');
@@ -37,6 +38,7 @@ const koreanIndieImg = require('../../assets/images/searchscreen/genres/korean_i
 const healingImg = require('../../assets/images/searchscreen/genres/healing.png');
 
 const SpotifySearchScreen = () => {
+  const theme = useTheme();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const { getCurrentUserProfile, search, isLoading, error, addTracksToPlaylist, getUserPlaylists } = useSpotifyApi();
   const { isAuthenticated, profileImage } = useAuth();
@@ -133,19 +135,19 @@ const SpotifySearchScreen = () => {
     {
       id: 1,
       title: '#cozy',
-      color: '#8E6A5B',
+      color: theme.colors.primary,
       image: cozyImg,
     },
     {
       id: 2,
       title: '#korean indie',
-      color: '#777777',
+      color: theme.colors.textSecondary,
       image: koreanIndieImg,
     },
     {
       id: 3,
       title: '#healing',
-      color: '#B8860B',
+      color: theme.colors.primary,
       image: healingImg,
     },
   ];
@@ -222,17 +224,323 @@ const SpotifySearchScreen = () => {
   // Helper to render icon for history type
   const renderHistoryIcon = (type: string) => {
     switch (type) {
-      case 'artist': return <Ionicons name="person" size={18} color="#b3b3b3" style={{ marginRight: 8 }} />;
-      case 'track': return <Ionicons name="musical-notes" size={18} color="#b3b3b3" style={{ marginRight: 8 }} />;
-      case 'album': return <Ionicons name="albums" size={18} color="#b3b3b3" style={{ marginRight: 8 }} />;
-      case 'playlist': return <Ionicons name="list" size={18} color="#b3b3b3" style={{ marginRight: 8 }} />;
-      default: return <Ionicons name="search" size={18} color="#b3b3b3" style={{ marginRight: 8 }} />;
+      case 'artist': return <Ionicons name="person" size={18} color={theme.colors.textSecondary} style={{ marginRight: 8 }} />;
+      case 'track': return <Ionicons name="musical-notes" size={18} color={theme.colors.textSecondary} style={{ marginRight: 8 }} />;
+      case 'album': return <Ionicons name="albums" size={18} color={theme.colors.textSecondary} style={{ marginRight: 8 }} />;
+      case 'playlist': return <Ionicons name="list" size={18} color={theme.colors.textSecondary} style={{ marginRight: 8 }} />;
+      default: return <Ionicons name="search" size={18} color={theme.colors.textSecondary} style={{ marginRight: 8 }} />;
     }
-  };
+};
+
+const styles = StyleSheet.create({
+    // Modal styles
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: theme.colors.overlay,
+      justifyContent: 'flex-end',
+    },
+    modalContent: {
+      backgroundColor: theme.colors.card,
+      borderTopLeftRadius: 12,
+      borderTopRightRadius: 12,
+      padding: 20,
+      maxHeight: '80%',
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 20,
+    },
+    modalTitle: {
+      color: theme.colors.text,
+      fontSize: 18,
+      fontWeight: 'bold',
+    },
+    loadingIndicator: {
+      marginVertical: 20,
+    },
+    noPlaylistsText: {
+      color: theme.colors.textSecondary,
+      textAlign: 'center',
+      marginVertical: 20,
+    },
+    playlistItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+    },
+    playlistImage: {
+      width: 50,
+      height: 50,
+      borderRadius: 4,
+      marginRight: 12,
+    },
+    playlistInfo: {
+      flex: 1,
+    },
+    playlistName: {
+      color: theme.colors.text,
+      fontSize: 16,
+      marginBottom: 4,
+    },
+    playlistTracks: {
+      color: theme.colors.textSecondary,
+      fontSize: 12,
+    },
+    resultsContainer: {
+      flex: 1,
+      width: '100%',
+      marginBottom: 80, // Add some bottom margin to account for the now playing bar
+    },
+    resultsContentContainer: {
+      paddingBottom: 100, // Extra padding at the bottom for better scrolling
+    },
+  container: {
+    flex: 1,
+      backgroundColor: theme.colors.background,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 16,
+    paddingBottom: 20,
+  },
+  profileImage: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 12,
+  },
+  headerTitle: {
+      color: theme.colors.text,
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  searchContainer: {
+    marginBottom: 24,
+  },
+  searchBar: {
+      backgroundColor: theme.colors.card,
+    borderRadius: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+      color: theme.colors.text,
+  },
+  section: {
+    marginBottom: 32,
+  },
+  sectionTitle: {
+      color: theme.colors.text,
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  pickedCard: {
+      backgroundColor: theme.colors.card,
+    borderRadius: 8,
+    height: 152,
+    flexDirection: 'row',
+  },
+  pickedImage: {
+    width: '40%',
+    height: '100%',
+    borderTopLeftRadius: 8,
+    borderBottomLeftRadius: 8,
+  },
+  pickedContent: {
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+    padding: 16,
+    flex: 1,
+  },
+  pickedTextContainer: {
+    flex: 1,
+  },
+  pickedSubtitle: {
+      color: theme.colors.textSecondary,
+    fontSize: 13,
+    marginBottom: 4,
+  },
+  pickedTitle: {
+      color: theme.colors.text,
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  pickedDescription: {
+      color: theme.colors.textSecondary,
+    fontSize: 10,
+    lineHeight: 16,
+    marginBottom: 4,
+  },
+  pickedActions: {
+    marginTop: 4,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+  },
+  addButton: {},
+  playButton: {
+      backgroundColor: theme.colors.primary,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  genresGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  genreTile: {
+    width: '31%',
+    height: 190,
+    borderRadius: 10,
+    // padding: 12,
+    justifyContent: 'space-between',
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  genreTitle: {
+      color: theme.colors.text,
+    fontSize: 14,
+    fontWeight: 'bold',
+    position: 'absolute',
+    zIndex: 2,
+    bottom: 10,
+    left: 10,
+  },
+  genreImage: {
+    // position: 'absolute',
+    // bottom: -10,
+    // right: -10,
+    width: '100%',
+    height: '100%',
+    borderRadius: 4,
+    // transform: [{ rotate: '15deg' }],
+  },
+  browseCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+      backgroundColor: theme.colors.card,
+    borderRadius: 8,
+    padding: 12,
+  },
+  browseImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 4,
+    marginRight: 12,
+  },
+  browseContent: {
+    flex: 1,
+  },
+  browseTitle: {
+      color: theme.colors.text,
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  browseArtist: {
+      color: theme.colors.textSecondary,
+    fontSize: 14,
+  },
+  moreButtonBrowse: {
+    marginRight: 12,
+  },
+  playButtonBrowse: {
+      backgroundColor: theme.colors.primary,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bottomNav: {
+    flexDirection: 'row',
+      backgroundColor: theme.colors.background,
+    paddingVertical: 8,
+    paddingBottom: 20,
+  },
+  navItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  navText: {
+      color: theme.colors.text,
+    fontSize: 12,
+    marginTop: 4,
+    fontWeight: '500',
+  },
+    historyDropdown: {
+      backgroundColor: theme.colors.card,
+      borderRadius: 8,
+      marginTop: 4,
+      marginBottom: 8,
+      paddingVertical: 4,
+      paddingHorizontal: 0,
+      shadowColor: theme.isDarkMode ? '#000' : '#666',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      elevation: 3,
+      zIndex: 10,
+    },
+    historyItem: {
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+    },
+    historyText: {
+      color: theme.colors.text,
+      fontSize: 16,
+    },
+    searchResultsContainer: {
+      backgroundColor: theme.colors.card,
+      borderRadius: 16,
+      padding: 12,
+      marginBottom: 24,
+      marginTop: 8,
+    },
+    resultsSection: {
+      marginBottom: 24,
+    },
+    browseCardAesthetic: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: theme.colors.card,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 16,
+      shadowColor: theme.isDarkMode ? '#000' : '#666',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+  });
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#000" />
+      <StatusBar barStyle={theme.isDarkMode ? "light-content" : "dark-content"} backgroundColor={theme.colors.background} />
       <TouchableWithoutFeedback
         onPress={() => {
           Keyboard.dismiss();
@@ -254,12 +562,12 @@ const SpotifySearchScreen = () => {
                   width: '100%',
                   zIndex: 100,
                   elevation: 10,
-                  backgroundColor: '#000',
+                  backgroundColor: theme.colors.card,
                   borderRadius: 12,
                   padding: 0,
                   marginTop: 70,
                   marginBottom: 0,
-                  shadowColor: '#000',
+                  shadowColor: theme.isDarkMode ? '#000' : '#666',
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.2,
                   shadowRadius: 4,
@@ -268,15 +576,15 @@ const SpotifySearchScreen = () => {
               ]}
               pointerEvents="box-none"
             >
-              <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 18, marginLeft: 16, marginTop: 16, marginBottom: 8 }}>Recent searches</Text>
+              <Text style={{ color: theme.colors.text, fontWeight: 'bold', fontSize: 18, marginLeft: 16, marginTop: 16, marginBottom: 8 }}>Recent searches</Text>
               {searchHistory.slice(0, 6).map((item, idx) => (
                 <React.Fragment key={item.type + (item.id || item.value) + idx}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 16, backgroundColor: '#000' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 16, backgroundColor: theme.colors.card }}>
                     {/* Image */}
                     {item.imageUrl ? (
                       <Image source={{ uri: item.imageUrl }} style={{ width: 40, height: 40, borderRadius: item.type === 'artist' ? 20 : 8, marginRight: 12 }} />
                     ) : (
-                      <View style={{ width: 40, height: 40, borderRadius: item.type === 'artist' ? 20 : 8, marginRight: 12, backgroundColor: '#232323', justifyContent: 'center', alignItems: 'center' }}>
+                      <View style={{ width: 40, height: 40, borderRadius: item.type === 'artist' ? 20 : 8, marginRight: 12, backgroundColor: theme.colors.background, justifyContent: 'center', alignItems: 'center' }}>
                         {renderHistoryIcon(item.type)}
                       </View>
                     )}
@@ -298,10 +606,10 @@ const SpotifySearchScreen = () => {
                       }}
                       activeOpacity={0.7}
                     >
-                      <Text style={{ color: '#fff', fontSize: 16, fontWeight: '500' }} numberOfLines={1}>
+                      <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: '500' }} numberOfLines={1}>
                         {item.type === 'query' ? item.value : item.name}
                       </Text>
-                      <Text style={{ color: '#b3b3b3', fontSize: 13, marginTop: 2 }} numberOfLines={1}>
+                      <Text style={{ color: theme.colors.textSecondary, fontSize: 13, marginTop: 2 }} numberOfLines={1}>
                         {item.type === 'artist' && 'Artist'}
                         {item.type === 'track' && (item.artist ? `Song • ${item.artist}` : 'Song')}
                         {item.type === 'album' && 'Album'}
@@ -318,12 +626,12 @@ const SpotifySearchScreen = () => {
                       style={{ marginLeft: 8, padding: 8 }}
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     >
-                      <Ionicons name="close" size={20} color="#b3b3b3" />
+                      <Ionicons name="close" size={20} color={theme.colors.textSecondary} />
                     </TouchableOpacity>
                   </View>
                   {/* Separator */}
                   {idx < Math.min(searchHistory.length, 6) - 1 && (
-                    <View style={{ height: 1, backgroundColor: '#fff', opacity: 0.08, marginLeft: 16, marginRight: 16 }} />
+                    <View style={{ height: 1, backgroundColor: theme.colors.border, marginLeft: 16, marginRight: 16 }} />
                   )}
                 </React.Fragment>
               ))}
@@ -334,7 +642,7 @@ const SpotifySearchScreen = () => {
                   marginTop: 8,
                   marginBottom: 12,
                   borderWidth: 1,
-                  borderColor: '#b3b3b3',
+                  borderColor: theme.colors.border,
                   borderRadius: 20,
                   paddingHorizontal: 20,
                   paddingVertical: 8,
@@ -345,7 +653,7 @@ const SpotifySearchScreen = () => {
                   AsyncStorage.setItem('searchHistory', JSON.stringify([]));
                 }}
               >
-                <Text style={{ color: '#fff', fontWeight: '500' }}>Clear recent searches</Text>
+                <Text style={{ color: theme.colors.text, fontWeight: '500' }}>Clear recent searches</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -353,7 +661,7 @@ const SpotifySearchScreen = () => {
             {/* Header */}
             <View style={styles.header}>
               {/* <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
-              <BackButton />
+                <BackButton />
               </TouchableOpacity> */}
               <TouchableOpacity onPress={() => { navigation.navigate('User'); showToast('Profile opened', 'info'); }}>
                 <Image
@@ -370,12 +678,12 @@ const SpotifySearchScreen = () => {
                 style={styles.searchBar}
                 onLayout={e => setInputLayout(e.nativeEvent.layout)}
               >
-                <Ionicons name="search" size={20} color="#000" style={styles.searchIcon} />
+                <Ionicons name="search" size={20} color={theme.colors.text} style={styles.searchIcon} />
                 <TextInput
                   ref={ref => setSearchInputRef(ref)}
                   style={styles.searchInput}
                   placeholder="What do you want to listen to?"
-                  placeholderTextColor="#666"
+                  placeholderTextColor={theme.colors.textSecondary}
                   value={query}
                   onChangeText={setQuery}
                   autoCorrect={false}
@@ -390,16 +698,16 @@ const SpotifySearchScreen = () => {
             {/* Search Results */}
             {searching && (
               <View style={{ alignItems: 'center', marginVertical: 16 }}>
-                <Text style={{ color: '#fff' }}>Searching...</Text>
+                <Text style={{ color: theme.colors.text }}>Searching...</Text>
               </View>
             )}
             {searchError && (
               <View style={{ alignItems: 'center', marginVertical: 16 }}>
-                <Text style={{ color: 'red' }}>{searchError}</Text>
+                <Text style={{ color: theme.colors.error }}>{searchError}</Text>
               </View>
             )}
             {results && (
-                            <ScrollView
+              <ScrollView
                 style={styles.searchResultsContainer}
                 contentContainerStyle={styles.resultsContentContainer}
                 showsVerticalScrollIndicator={false}
@@ -457,9 +765,9 @@ const SpotifySearchScreen = () => {
                             disabled={audioLoading && previewTrackId === track.id}
                           >
                             {audioLoading && previewTrackId === track.id ? (
-                              <ActivityIndicator color="#1DB954" size={20} />
+                              <ActivityIndicator color={theme.colors.primary} size={20} />
                             ) : (
-                              <Ionicons name={isPlaying && previewTrackId === track.id ? 'stop-circle' : 'play-circle'} size={28} color="#1DB954" />
+                              <Ionicons name={isPlaying && previewTrackId === track.id ? 'stop-circle' : 'play-circle'} size={28} color={theme.colors.primary} />
                             )}
                           </TouchableOpacity>
                           <TouchableOpacity
@@ -597,8 +905,8 @@ const SpotifySearchScreen = () => {
             {/* Picked for you section */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Picked for you</Text>
-
-              <TouchableOpacity
+              
+              <TouchableOpacity 
                 style={styles.pickedCard}
                 onPress={() => navigation.navigate('Artist', { id: 'picked-artist', name: 'K-Pop Gaming' })}
               >
@@ -619,7 +927,7 @@ const SpotifySearchScreen = () => {
                       <More />
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.playButton}>
-                      <Ionicons name="play" size={24} color="#000" />
+                      <Ionicons name="play" size={24} color={theme.colors.buttonText} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -629,7 +937,7 @@ const SpotifySearchScreen = () => {
             {/* Explore your genres section */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Explore your genres</Text>
-
+              
               <View style={styles.genresGrid}>
                 {genres.map((item) => (
                   <GenreTile key={item.id} item={item} />
@@ -640,26 +948,9 @@ const SpotifySearchScreen = () => {
             {/* Browse all section */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Browse all</Text>
-
-              {/* <TouchableOpacity style={styles.browseCard}>
-              <Image
-                source={{ uri: 'https://picsum.photos/60/60?random=album' }}
-                style={styles.browseImage}
-              />
-              <View style={styles.browseContent}>
-                <Text style={styles.browseTitle}>Paint The Town Red</Text>
-                <Text style={styles.browseArtist}>Doja Cat</Text>
-              </View>
-              <TouchableOpacity style={styles.moreButtonBrowse}>
-                <Ionicons name="ellipsis-horizontal" size={20} color="#b3b3b3" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.playButtonBrowse}>
-                <Ionicons name="play" size={16} color="#000" />
-              </TouchableOpacity>
-            </TouchableOpacity> */}
             </View>
           </ScrollView>
-
+          
           <NowPlayingBar />
 
           {/* Playlist Selection Modal */}
@@ -674,12 +965,12 @@ const SpotifySearchScreen = () => {
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalTitle}>Add to Playlist</Text>
                   <TouchableOpacity onPress={() => setIsPlaylistModalVisible(false)}>
-                    <Ionicons name="close" size={24} color="white" />
+                    <Ionicons name="close" size={24} color={theme.colors.text} />
                   </TouchableOpacity>
                 </View>
 
                 {isLoadingPlaylists ? (
-                  <ActivityIndicator size="large" color="#1DB954" style={styles.loadingIndicator} />
+                  <ActivityIndicator size="large" color={theme.colors.primary} style={styles.loadingIndicator} />
                 ) : userPlaylists.length === 0 ? (
                   <Text style={styles.noPlaylistsText}>You don't have any playlists yet.</Text>
                 ) : (
@@ -715,311 +1006,5 @@ const SpotifySearchScreen = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  // Modal styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#282828',
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    padding: 20,
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  modalTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  loadingIndicator: {
-    marginVertical: 20,
-  },
-  noPlaylistsText: {
-    color: '#b3b3b3',
-    textAlign: 'center',
-    marginVertical: 20,
-  },
-  playlistItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#404040',
-  },
-  playlistImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 4,
-    marginRight: 12,
-  },
-  playlistInfo: {
-    flex: 1,
-  },
-  playlistName: {
-    color: '#fff',
-    fontSize: 16,
-    marginBottom: 4,
-  },
-  playlistTracks: {
-    color: '#b3b3b3',
-    fontSize: 12,
-  },
-  resultsContainer: {
-    flex: 1,
-    width: '100%',
-    marginBottom: 80, // Add some bottom margin to account for the now playing bar
-  },
-  resultsContentContainer: {
-    paddingBottom: 100, // Extra padding at the bottom for better scrolling
-  },
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 16,
-    paddingBottom: 20,
-  },
-  profileImage: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    marginRight: 12,
-  },
-  headerTitle: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  searchContainer: {
-    marginBottom: 24,
-  },
-  searchBar: {
-    backgroundColor: '#fff',
-    borderRadius: 6,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-  },
-  searchIcon: {
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: '#000',
-  },
-  section: {
-    marginBottom: 32,
-  },
-  sectionTitle: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  pickedCard: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 8,
-    height: 152,
-    flexDirection: 'row',
-  },
-  pickedImage: {
-    width: '40%',
-    height: '100%',
-    borderTopLeftRadius: 8,
-    borderBottomLeftRadius: 8,
-  },
-  pickedContent: {
-    flexDirection: 'column',
-    justifyContent: 'flex-start',
-    alignItems: 'flex-start',
-    padding: 16,
-    flex: 1,
-  },
-  pickedTextContainer: {
-    flex: 1,
-  },
-  pickedSubtitle: {
-    color: '#b3b3b3',
-    fontSize: 13,
-    marginBottom: 4,
-  },
-  pickedTitle: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  pickedDescription: {
-    color: '#b3b3b3',
-    fontSize: 10,
-    lineHeight: 16,
-    marginBottom: 4,
-  },
-  pickedActions: {
-    marginTop: 4,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-  },
-  addButton: {},
-  playButton: {
-    backgroundColor: '#fff',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  genresGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  genreTile: {
-    width: '31%',
-    height: 190,
-    borderRadius: 10,
-    // padding: 12,
-    justifyContent: 'space-between',
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  genreTitle: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-    position: 'absolute',
-    zIndex: 2,
-    bottom: 10,
-    left: 10,
-  },
-  genreImage: {
-    // position: 'absolute',
-    // bottom: -10,
-    // right: -10,
-    width: '100%',
-    height: '100%',
-    borderRadius: 4,
-    // transform: [{ rotate: '15deg' }],
-  },
-  browseCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#1a1a1a',
-    borderRadius: 8,
-    padding: 12,
-  },
-  browseImage: {
-    width: 50,
-    height: 50,
-    borderRadius: 4,
-    marginRight: 12,
-  },
-  browseContent: {
-    flex: 1,
-  },
-  browseTitle: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  browseArtist: {
-    color: '#b3b3b3',
-    fontSize: 14,
-  },
-  moreButtonBrowse: {
-    marginRight: 12,
-  },
-  playButtonBrowse: {
-    backgroundColor: '#1DB954',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    backgroundColor: '#000',
-    paddingVertical: 8,
-    paddingBottom: 20,
-  },
-  navItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  navText: {
-    color: '#fff',
-    fontSize: 12,
-    marginTop: 4,
-    fontWeight: '500',
-  },
-  historyDropdown: {
-    backgroundColor: '#181818',
-    borderRadius: 8,
-    marginTop: 4,
-    marginBottom: 8,
-    paddingVertical: 4,
-    paddingHorizontal: 0,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-    zIndex: 10,
-  },
-  historyItem: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-  },
-  historyText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-  searchResultsContainer: {
-    backgroundColor: '#181818',
-    borderRadius: 16,
-    padding: 12,
-    marginBottom: 24,
-    marginTop: 8,
-  },
-  resultsSection: {
-    marginBottom: 24,
-  },
-  browseCardAesthetic: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#232323',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-});
 
 export default SpotifySearchScreen;

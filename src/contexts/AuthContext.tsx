@@ -82,7 +82,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     console.log('Auth state changed - isAuthenticated:', isAuthenticated, 'accessToken:', !!accessToken);
     if (isAuthenticated && accessToken) {
       // Fetch profile immediately when authentication is complete
-      fetchProfile();
+    fetchProfile();
     } else {
       setProfile(null);
       setProfileImage(null);
@@ -137,18 +137,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const contextValue = React.useMemo(() => {
     console.log('AuthContext: Creating context value - isAuthenticated:', !!isAuthenticated, 'profileImage:', profileImage, 'forceUpdate:', forceUpdate);
     return {
-      isAuthenticated: !!isAuthenticated,
-      isLoading,
-      error: error || authError || null,
-      accessToken,
-      refreshToken,
-      expiresIn,
-      login,
-      logout,
-      refreshAccessToken,
-      getValidToken,
-      profile,
-      profileImage,
+    isAuthenticated: !!isAuthenticated,
+    isLoading,
+    error: error || authError || null,
+    accessToken,
+    refreshToken,
+    expiresIn,
+    login,
+    logout,
+    refreshAccessToken,
+    getValidToken,
+    profile,
+    profileImage,
     };
   }, [
     isAuthenticated, 
