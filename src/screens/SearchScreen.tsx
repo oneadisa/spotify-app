@@ -37,6 +37,54 @@ const cozyImg = require('../../assets/images/searchscreen/genres/cozy.png');
 const koreanIndieImg = require('../../assets/images/searchscreen/genres/korean_indie.png');
 const healingImg = require('../../assets/images/searchscreen/genres/healing.png');
 
+// Move genres array outside component to prevent re-creation on every render
+const GENRES_DATA = [
+  {
+    id: 1,
+    title: '#cozy',
+    image: cozyImg,
+  },
+  {
+    id: 2,
+    title: '#korean indie',
+    image: koreanIndieImg,
+  },
+  {
+    id: 3,
+    title: '#healing',
+    image: healingImg,
+  },
+];
+
+// Move GenreTile component outside to avoid context issues
+const GenreTile = React.memo(({ item, textColor }: { item: { id: number; title: string; image: any }; textColor: string }) => {
+  return (
+    <TouchableOpacity style={{
+      width: '31%',
+      height: 190,
+      borderRadius: 10,
+      justifyContent: 'space-between',
+      position: 'relative',
+      overflow: 'hidden',
+    }}>
+      <Text style={{
+        color: textColor,
+        fontSize: 14,
+        fontWeight: 'bold',
+        position: 'absolute',
+        zIndex: 2,
+        bottom: 10,
+        left: 10,
+      }}>{item.title}</Text>
+      <Image source={item.image} style={{
+        width: '100%',
+        height: '100%',
+        borderRadius: 4,
+      }} />
+    </TouchableOpacity>
+  );
+});
+
 const SpotifySearchScreen = () => {
   const theme = useTheme();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -130,34 +178,6 @@ const SpotifySearchScreen = () => {
     // Cleanup
     return () => clearTimeout(timeout);
   }, [query]);
-
-  const genres = [
-    {
-      id: 1,
-      title: '#cozy',
-      color: theme.colors.primary,
-      image: cozyImg,
-    },
-    {
-      id: 2,
-      title: '#korean indie',
-      color: theme.colors.textSecondary,
-      image: koreanIndieImg,
-    },
-    {
-      id: 3,
-      title: '#healing',
-      color: theme.colors.primary,
-      image: healingImg,
-    },
-  ];
-
-  const GenreTile = ({ item }: { item: { id: number; title: string; color: string; image: any } }) => (
-    <TouchableOpacity style={[styles.genreTile,]}>
-      <Text style={styles.genreTitle}>{item.title}</Text>
-      <Image source={item.image} style={styles.genreImage} />
-    </TouchableOpacity>
-  );
 
   // Handle play/pause for track preview (improved to match PlaylistScreen)
   const handlePreview = async (track: any) => {
@@ -410,33 +430,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  genreTile: {
-    width: '31%',
-    height: 190,
-    borderRadius: 10,
-    // padding: 12,
-    justifyContent: 'space-between',
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  genreTitle: {
-      color: theme.colors.text,
-    fontSize: 14,
-    fontWeight: 'bold',
-    position: 'absolute',
-    zIndex: 2,
-    bottom: 10,
-    left: 10,
-  },
-  genreImage: {
-    // position: 'absolute',
-    // bottom: -10,
-    // right: -10,
-    width: '100%',
-    height: '100%',
-    borderRadius: 4,
-    // transform: [{ rotate: '15deg' }],
-  },
   browseCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -535,8 +528,8 @@ const styles = StyleSheet.create({
       shadowOpacity: 0.15,
       shadowRadius: 4,
       elevation: 2,
-    },
-  });
+  },
+});
 
   return (
     <SafeAreaView style={styles.container}>
@@ -939,8 +932,8 @@ const styles = StyleSheet.create({
               <Text style={styles.sectionTitle}>Explore your genres</Text>
               
               <View style={styles.genresGrid}>
-                {genres.map((item) => (
-                  <GenreTile key={item.id} item={item} />
+                {GENRES_DATA.map((item) => (
+                  <GenreTile key={item.id} item={item} textColor={theme.colors.text} />
                 ))}
               </View>
             </View>
