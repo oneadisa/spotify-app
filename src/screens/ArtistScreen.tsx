@@ -634,53 +634,6 @@ const styles = StyleSheet.create({
   const renderFooter = () => (
     <>
       {/* <NowPlayingBar /> */}
-      {/* Playlist Selection Modal */}
-      <Modal
-        visible={isPlaylistModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setIsPlaylistModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add to Playlist</Text>
-              <TouchableOpacity onPress={() => setIsPlaylistModalVisible(false)}>
-                <Ionicons name="close" size={24} color={theme.colors.text} />
-              </TouchableOpacity>
-            </View>
-            {isLoadingPlaylists ? (
-              <ActivityIndicator size="large" color={theme.colors.primary} style={styles.loadingIndicator} />
-            ) : userPlaylists.length === 0 ? (
-              <Text style={styles.noPlaylistsText}>You don't have any playlists yet.</Text>
-            ) : (
-              <FlatList
-                data={userPlaylists}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <TouchableOpacity 
-                    style={styles.playlistItem}
-                    onPress={() => handleAddToPlaylist(item.id)}
-                  >
-                    <Image 
-                      source={item.images?.[0]?.url ? { uri: item.images[0].url } : defaultArtistImage}
-                      style={styles.playlistImage}
-                    />
-                    <View style={styles.playlistInfo}>
-                      <Text style={styles.playlistName} numberOfLines={1}>
-                        {item.name}
-                      </Text>
-                      <Text style={styles.playlistTracks}>
-                        {item.tracks?.total || 0} tracks
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                )}
-              />
-            )}
-          </View>
-        </View>
-      </Modal>
     </>
   );
 
@@ -751,6 +704,54 @@ const styles = StyleSheet.create({
       <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0 }}>
         <NowPlayingBar />
       </View>
+      
+      {/* Playlist Selection Modal - moved to root level */}
+      <Modal
+        visible={isPlaylistModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsPlaylistModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add to Playlist</Text>
+              <TouchableOpacity onPress={() => setIsPlaylistModalVisible(false)}>
+                <Ionicons name="close" size={24} color={theme.colors.text} />
+              </TouchableOpacity>
+            </View>
+            {isLoadingPlaylists ? (
+              <ActivityIndicator size="large" color={theme.colors.primary} style={styles.loadingIndicator} />
+            ) : userPlaylists.length === 0 ? (
+              <Text style={styles.noPlaylistsText}>You don't have any playlists yet.</Text>
+            ) : (
+              <FlatList
+                data={userPlaylists}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <TouchableOpacity 
+                    style={styles.playlistItem}
+                    onPress={() => handleAddToPlaylist(item.id)}
+                  >
+                    <Image 
+                      source={item.images?.[0]?.url ? { uri: item.images[0].url } : defaultArtistImage}
+                      style={styles.playlistImage}
+                    />
+                    <View style={styles.playlistInfo}>
+                      <Text style={styles.playlistName} numberOfLines={1}>
+                        {item.name}
+                      </Text>
+                      <Text style={styles.playlistTracks}>
+                        {item.tracks?.total || 0} tracks
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
